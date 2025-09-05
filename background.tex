@@ -1,3 +1,4 @@
+
 \section{Background and Related Work}
 \subsection{The PageRank Algorithm}
 % Describe how PageRank works: power iteration, damping factor, convergence.
@@ -10,8 +11,17 @@
   \item applications of PageRank
 \end{itemize}
 
-PageRank is an algorithm that was originally introduced to measure the relevance of a website in the World Wide Web. It was created by Larry Page and Sergey Brin, the founders of Google, to optimize the search engine. The foundation of the algorithm is a graph where every node represents a website in the internet and an edge translates to a hyperlink on a website. To calculate the PageRank values, a transition matrix is constructed, in which each row represents a state, a website, and contains the probabilities of moving from one node to another. If a website has d outgoing links, then the probability of moving from the current page to another page is 1/d. The transition matrix describes the behavior of a "random surfer". The random surfer model describes the probability of a random user to visit a website. Finding the PageRank values is a Markov chain process, and its stationary distribution is the PageRank vector. Additionally, to make the Markov chain more realistic, a damping factor is introduced, which is commonly set to 0.85. That means with probability of $\alpha$ a random surfer clicks on an outgoing hyperlink on the current website and with probability of $1-\alpha$ the surfer "teleports" to a random website in the graph. This characteristic is important for PageRank because web graphs can have dangling nodes, disconnected parts or cycles. Thus, the damping factor ensures that the Markov chain is irreducible and aperiodic, which guarantees a convergence to a unique stationary distribution. 
-The PageRank algorithm is defined as the following:
+PageRank is an algorithm originally introduced to measure a website's relevance on the World Wide Web. A website's rank is higher the more websites link to it. It was created by Larry Page and Sergey Brin, the founders of Google, to optimize the search engine.
+The foundation of the algorithm is a graph where every node represents a website in the internet and an edge translates to a hyperlink on a website.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/PageRank Graph.pdf}
+    \caption{PageRank Graph}
+    \label{fig:pagerank-toy}
+\end{figure}
+
+To calculate the PageRank values, a transition matrix is constructed, in which each row represents a state, a website, and contains the probabilities of moving from one node to another. In figure 1 D has two outgoing edges, so the probability of moving from D to another node is $0.5$. The transition matrix describes the behavior of a "random surfer". The random surfer model describes the probability of a random user visiting a website. Finding the PageRank values is a Markov chain process, and its stationary distribution is the PageRank vector. Additionally, to model realistic user behavior, a damping factor is introduced, which is commonly set to 0.85. That means with probability $\alpha$ a random surfer clicks on an outgoing hyperlink on the current website and with probability $1-\alpha$ the surfer "teleports" to a random website in the graph. This characteristic is necessary for PageRank because web graphs can have dangling nodes, disconnected parts or cycles. Thus, the damping factor ensures that the Markov chain is irreducible and aperiodic, which guarantees a convergence to a unique stationary distribution. 
+The PageRank algorithm is commonly defined as the following:
 \begin{equation}
     \pi_v = \frac{1-\alpha}{n}+c\sum_{u\in N^-(v)}\frac{\pi_u}{d^+(u)} \quad\text{\cite{chebolu_pagerank_2008},}
 \end{equation} 
@@ -24,7 +34,28 @@ where:
     \item $d^+(u)$ is the out degree of $u$
 \end{itemize} 
 % talk about tolerance and convergence
-Each entry of the PageRank vector is the probability that a random surfer lands on the given node.
+The calculation of PageRank follows the power iteration method, a technique to finding the dominant eigenvalue. The iterative process is defined as follows
+\begin{enumerate}
+    \item Define the initial vector 
+    \begin{equation}
+        \pi^{(0)}=\frac{1}{n}e
+    \end{equation}
+    \item At each iteration apply the update rule, where $S$ is the transition matrix and $e$ is the all-ones vector
+    \begin{equation}
+        \pi^{(k+1)} = \alpha S^T+ \frac{(1-\alpha)}{n}e
+    \end{equation}
+    \item Continue until the difference between iterations is less than a tolerance $\epsilon$
+    \begin{equation}
+        ||\pi^{(k+1)}-\pi^{(k)}||_1<\epsilon \quad \text{\cite{langville_googles_2012}\cite{page_pagerank_1999}}
+    \end{equation}
+    
+\end{enumerate}
+Then $\pi$ satisfies 
+\begin{equation}
+    \pi=G^T\pi, \quad \text{where $G=\alpha S +\frac{1-\alpha}{n}ee^T$}
+\end{equation}
+and $\pi$ is a stationary probability distribution, the unique PageRank vector.
+Each entry in the PageRank vector represents the probability that a random surfer will land on a specific node. The power iteration method has a time complexity of $O(m)$ per iteration, where $m$ is the the number of edges. Thus, the total complexity is $O(m\cdot k)$. The number of iterations $k$ depends on the damping factor ,$\alpha$, and the tolerance ,$\epsilon$.
 
  
 \subsection{Challenges in Large-scale Graph Processing}
