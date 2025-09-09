@@ -75,5 +75,4 @@ Finally, GraphX achieves comparable performance to systems like Pregel, while al
     \item explain how it's more memory efficient than original methods
 \end{itemize}
 
-Standard PageRank uses power iteration, which requires storing the whole graph structure in memory and updating the PageRank values in each iteration. Therefore, for large graphs the original method is computationally and memory intensive. So that it becomes infeasible in practice. Hence, approximate PageRank 
-significant bottleneck is the memory. 
+The standard PageRank method uses power iteration, which requires storing the entire graph structure in memory and updating the PageRank values with each iteration until convergence. For large graphs, this this process is computationally and memory intensive, making it infeasible in practice. Thus, approximate PageRank methods have been proposed in the past to address these challenges. The approximate approach trades off accuracy for performance and significant memory savings \cite{wu_efficient_2024}. 

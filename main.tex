@@ -1,27 +1,32 @@
 \documentclass[a4paper,12pt]{article}
 
-% Encoding and Fonts
+% --- Encoding and Language ---
 \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}       
+\usepackage[T1]{fontenc}
 \usepackage[english]{babel}
-\usepackage{graphicx}
 
-% Formatting and Geometry
+% --- Layout ---
 \usepackage{geometry}
 \geometry{a4paper, margin=1in}
+\usepackage{setspace} % for \onehalfspacing
 
+% --- Section Titles ---
 \usepackage{titlesec}
 \titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
 \titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
 
-% Math and Graphics
+% --- Math and Graphics ---
 \usepackage{amsmath, amssymb}
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{caption}
 \usepackage{subcaption}
 
-% Hyperlinks and Bibliography
+% --- Bibliography (natbib) ---
+\usepackage[numbers]{natbib} % or [authoryear]
+\bibliographystyle{plainnat}
+
+% --- Hyperlinks (load after natbib) ---
 \usepackage{hyperref}
 \hypersetup{
     colorlinks=true,
@@ -29,32 +34,78 @@
     citecolor=blue,
     urlcolor=blue,
 }
-\usepackage{natbib}
 
-% Title info
+% --- Title info ---
 \title{Memory-efficient PageRank on Apache Spark\\ via Random Walks}
 \author{Nina Michalek \\ TU Berlin, DOS}
 \date{October 28, 2025}
 
 \begin{document}
 
-% --- Title Page ---
+% --- Title Page (no running headers/footers here) ---
 \begin{titlepage}
-    \centering
-    {\Large \textbf{Bachelor Thesis}}\\[2cm]
-    
-    {\Huge \bfseries Memory-efficient PageRank on Apache Spark \\ via Random Walks}\\[1.5cm]
-    
-    {\large Nina Michalek}\\
-    {\large TU Berlin \\ Department of Distributed and Operating Systems}\\[1cm]
-    
-    \vfill
-    
-    %\begin{flushleft}
-    \textbf{Supervisor:} Jonathan Will \\[0.3cm]
-    \textbf{Submission Date:} October 28, 2025
-    %\end{flushleft}
+\setlength{\parindent}{0pt}
+
+% Logos row (no header package; keeps full textheight)
+\noindent
+\begin{minipage}[t]{0.5\textwidth}
+  \includegraphics[width=0.45\textwidth]{images/Logo_dos.png}
+\end{minipage}%
+\begin{minipage}[t]{0.5\textwidth}
+  \raggedleft
+  \includegraphics[width=0.45\textwidth]{eet-thesis/src/TU_Logo_lang_RGB_rot.pdf}
+\end{minipage}
+
+\vspace{8mm}
+
+\hrule   % <<-- draws the horizontal rule
+\vspace{10mm}
+
+% Header text block (ragged to avoid underfull boxes)
+{\raggedright
+Technical University Berlin\\
+Faculty IV -- Electrical Engineering and Computer Science\\
+Department for Distributed and Operating Systems\par
+}
+
+\vspace{15mm}
+
+\begin{center}
+\Large Bachelor Thesis\\[15mm]
+\Huge \textbf{Memory-efficient PageRank on Apache Spark\\ via Random Walks}
+\end{center}
+
+\vspace{10mm}
+
+% Centered "submitted by" block
+\begin{center}
+\begin{tabular}{rl}
+submitted by: & Nina Michalek \\
+Matrikel-Nr.: & 469109 \\
+\end{tabular}
+\end{center}
+
+\vspace{8mm}
+
+\begin{center}
+\onehalfspacing
+for obtaining the academic degree \\
+\large \textbf{Bachelor of Science} \\
+\normalsize (B.\,Sc.)
+\end{center}
+
+\vfill
+
+% Bottom info block
+\onehalfspacing
+\begin{tabular}{@{}ll}
+Responsible university lecturer: & Prof.\ Dr.\ habil.\ Odej Kao\\
+Supervisor: & Jonathan Will\\
+Date of submission: & \today
+\end{tabular}
+
 \end{titlepage}
+% --- End Title Page ---
 
 % --- TOC + Main Document ---
 \tableofcontents
@@ -69,7 +120,6 @@
 \input{conclusion}
 
 \newpage
-\bibliographystyle{plain}
 \bibliography{references}
 
 \end{document}
