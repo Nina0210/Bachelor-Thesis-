@@ -12,3 +12,17 @@
     year = {2024},
     pages = {196:1--196:26},
 }
+@misc{xin_graphx_2014,
+    title = {{GraphX}: {Unifying} {Data}-{Parallel} and {Graph}-{Parallel} {Analytics}},
+    shorttitle = {{GraphX}},
+    url = {http://arxiv.org/abs/1402.2394},
+    doi = {10.48550/arXiv.1402.2394},
+    abstract = {From social networks to language modeling, the growing scale and importance of graph data has driven the development of numerous new graph-parallel systems (e.g., Pregel, GraphLab). By restricting the computation that can be expressed and introducing new techniques to partition and distribute the graph, these systems can efficiently execute iterative graph algorithms orders of magnitude faster than more general data-parallel systems. However, the same restrictions that enable the performance gains also make it difficult to express many of the important stages in a typical graph-analytics pipeline: constructing the graph, modifying its structure, or expressing computation that spans multiple graphs. As a consequence, existing graph analytics pipelines compose graph-parallel and data-parallel systems using external storage systems, leading to extensive data movement and complicated programming model. To address these challenges we introduce GraphX, a distributed graph computation framework that unifies graph-parallel and data-parallel computation. GraphX provides a small, core set of graph-parallel operators expressive enough to implement the Pregel and PowerGraph abstractions, yet simple enough to be cast in relational algebra. GraphX uses a collection of query optimization techniques such as automatic join rewrites to efficiently implement these graph-parallel operators. We evaluate GraphX on real-world graphs and workloads and demonstrate that GraphX achieves comparable performance as specialized graph computation systems, while outperforming them in end-to-end graph pipelines. Moreover, GraphX achieves a balance between expressiveness, performance, and ease of use.},
+    urldate = {2025-04-04},
+    publisher = {arXiv},
+    author = {Xin, Reynold S. and Crankshaw, Daniel and Dave, Ankur and Gonzalez, Joseph E. and Franklin, Michael J. and Stoica, Ion},
+    month = feb,
+    year = {2014},
+    note = {arXiv:1402.2394 [cs]},
+    keywords = {Computer Science - Databases},
+}

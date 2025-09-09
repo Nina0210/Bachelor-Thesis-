@@ -9,6 +9,7 @@
 % Formatting and Geometry
 \usepackage{geometry}
 \geometry{a4paper, margin=1in}
+
 \usepackage{titlesec}
 \titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
 \titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
@@ -30,14 +31,32 @@
 }
 \usepackage{natbib}
 
-% Title
+% Title info
 \title{Memory-efficient PageRank on Apache Spark\\ via Random Walks}
-\author{Nina Michalek\\TU Berlin, DOS}
+\author{Nina Michalek \\ TU Berlin, DOS}
 \date{October 28, 2025}
 
 \begin{document}
 
-\maketitle
+% --- Title Page ---
+\begin{titlepage}
+    \centering
+    {\Large \textbf{Bachelor Thesis}}\\[2cm]
+    
+    {\Huge \bfseries Memory-efficient PageRank on Apache Spark \\ via Random Walks}\\[1.5cm]
+    
+    {\large Nina Michalek}\\
+    {\large TU Berlin \\ Department of Distributed and Operating Systems}\\[1cm]
+    
+    \vfill
+    
+    %\begin{flushleft}
+    \textbf{Supervisor:} Jonathan Will \\[0.3cm]
+    \textbf{Submission Date:} October 28, 2025
+    %\end{flushleft}
+\end{titlepage}
+
+% --- TOC + Main Document ---
 \tableofcontents
 \newpage
 
@@ -48,7 +67,6 @@
 \input{evaluation}
 \input{discussion}
 \input{conclusion}
-
 
 \newpage
 \bibliographystyle{plain}
