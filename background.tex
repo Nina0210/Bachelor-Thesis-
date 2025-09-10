@@ -1,5 +1,5 @@
 
-\section{Background and Related Work}
+\section{Fundamentals and Related Work}
 \subsection{The PageRank Algorithm}
 % Describe how PageRank works: power iteration, damping factor, convergence.
 
@@ -67,12 +67,26 @@ GraphX is a library built on top of Apache Spark that specializes in large graph
 Specialized systems like Pregel are optimized for graph algorithms, but they are not suitable for practical use since they lack the flexibility to combine graph analysis with broader data processing tasks and the integration of such systems with other data stacks is limited. In contrast, GraphX's integration into Spark's unified analytics platform allows for the seamless combination of graph analytics and other data pipelines. This approach eliminates the need for external ETL integration and data movement, both of which are common with specialized systems. Additionally, GraphX offers optimizations such as vertex-cut partitioning and join elimination, positively impacting communication and runtime \cite{xin_graphx_2014}. Nevertheless, GraphX suffers from the general-purpose nature of the Apache Spark system and may struggle with runtime and very large graphs due to its high memory demand \cite{zhuo_distributed_2021}.  
 Finally, GraphX achieves comparable performance to systems like Pregel, while also providing an efficient, end-to-end analytics pipeline. This makes GraphX a more versatile framework for real-world applications \cite{xin_graphx_2014}.
 
+\subsection{Spark's Memory Management}
+Apache Spark's memory allocation is crucial for good performance of Spark applications. Spark uses a unified memory, the JVM Heap Space, which is also called as Spark Executor Heap Space. The amount of JVM Heap Memory allocated to each executor is called spark.executor.memory. It is distributed further into three parts: 
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\linewidth]{images/Spark_mem_man.pdf}
+    \caption{JVM Heap Memory}
+    \label{fig:spark-mem-man}
+\end{figure}
+
+\textbf{Reserved Memory.} Out of the total memory allocated to an executor, 300 MB are reserved to store Spark internal objects. It is constant overall executors and guarantees sufficient memory for the system \cite{apache_spark_configuration_2025}.
+\textbf{Spark Unified Memory.} This section is the usable memory, divided into two subregions: Spark Memory and User Memory. The memory allocation depends on spark.memory.fraction. Typically, $60\%$ of the memory is allocated to Spark Memory and $40\%$ to User Memory. Forty percent of the user memory is used to store user data and the results of operations. The Spark Memory consists of execution and storage memory. While execution memory is mainly used to store temporary data for all computations such as shuffles, joins and aggregations, storage memory holds cached data, broadcast variables. Furthermore the memory allocation between the two can be configured through spark.memory.storage.Fraction where the default value is $0.5$. A special feature of Spark memory is that it's flexible, Spark allows executor and storage memory to borrow from each other. This is called dynamic occupancy mechanism. But this feature comes with some restraints: While storage memory can borrow as much execution memory when it's not used, execution memory can only borrow memory up to a certain threshold called onHeapStorageSize. This part is only used by storage memory when its not occupied by execution memory. Storage memory can not evict execution memory and has to wait until it's free. On the other side execution memory has priority and is able to evict borrowed memory. In that case cached data will evicted until sufficient memory is released. 
+
+
 
 \subsection{Approximate PageRank Methods}
 % Iteration, sampling, matrix approximation, and Monte Carlo approaches.
-\begin{itemize}
-    \item explain approximate pagerank methods also take parts of introduction
-    \item explain how it's more memory efficient than original methods
-\end{itemize}
 
-The standard PageRank method uses power iteration, which requires storing the entire graph structure in memory and updating the PageRank values with each iteration until convergence. For large graphs, this this process is computationally and memory intensive, making it infeasible in practice. Thus, approximate PageRank methods have been proposed in the past to address these challenges. The approximate approach trades off accuracy for performance and significant memory savings \cite{wu_efficient_2024}. 
+The standard PageRank method uses power iteration, which requires storing the entire graph structure in memory and updating the PageRank values with each iteration until convergence. For large graphs, this this process is computationally and memory intensive, making it infeasible in practice. Therefore, approximate PageRank algorithms have been proposed for practical large-scale analysis that trade off accuracy for efficiency \cite{wu_efficient_2024}. The following methods have been introduced:
+\textbf{Iteration methods} \cite{xie_parameterized_2023-1}\cite{anikin_efficient_2022} accelerate the standard power iteration but still operate on the whole graph structure \cite{wu_efficient_2024}. 
+\textbf{Sampling-based methods} estimate PageRank values by using smaller, sampled subgraphs \cite{bar-yossef_local_2008}\cite{chen_local_2004}. Despite reducing the size of the input data, these methods cannot estimate the PageRank values for the vertices outside the sampled set \cite{wu_efficient_2024}.
+\textbf{Matrix approximation methods} use a low-rank approximated transition matrix to estimate PageRank values \cite{liu_fast_2015}\cite{benczur_feasibility_2005}. 
+\textbf{Monte Carlo methods} estimate PageRank by simulating random walks on the graph. Instead of iteratively updating a full rank vector, these models simulate many random walks on the graph \cite{avrachenkov_monte_2007}. The value of a node is estimated by the number of walks that end at the vertex. In order to achieve high accuracy, these methods have to go through a large number of iterations \cite{wu_efficient_2024}. However, the memory required during the simulation can be controlled by the number of concurrent random walkers rather than by the total number of vertices \cite{avrachenkov_monte_2007}. Given the potential memory advantages by controlling the random walker count, Monte Carlo methods offer a promising direction for large-scale PageRank approximation.
