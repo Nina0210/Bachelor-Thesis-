@@ -1,20 +1,19 @@
 \section{System Design and Methodology}
 \subsection{Motivation for Monte Carlo in Spark}
 % Why Monte Carlo is a promising approach for memory-efficiency.
-The Monte Carlo method presents an alternative approach to the classic PageRank implementation. It focuses on simulating random walks on the graph instead of iteratively computing the whole rank vector. In this approach a specified number of walkers is released per Node which then traverse the graph according to the "random surfer" model. Similar to the original algorithm, a random surfer either follows an outgoing link with probability $\alpha$ or teleports to a random node of the graph with probability $1-\alpha$. At the end the PageRank values ar estimated by the relative frequency a node was visited by random walkers. The key difference to the iterative approach is that a walker only takes a predefined number of steps instead of updating the rank vector until convergence. This way the Monte Carlo approach can control memory usage by limiting the number of walkers and steps, making it a promising candidate for large scale graph PageRank approximation \cite{avrachenkov_monte_2007}. Furthermore implementing Monte Carlo PageRank in a Spark environment leverages the advantages of a distributed data processing framework which includes Sparks RDDs. The data structure allows to represent the entire graph structure and the walkers state in every step. The properties of Spark such as, its fault tolerance through lineage and its efficient in-memory computation, make it an attractive platform for evaluating the Monte Carlo PageRank method in comparison to the iterative PageRank method.
+The Monte Carlo method is an alternative approach to the traditional PageRank implementation. Instead of iteratively computing the entire rank vector, it focuses on simulating random walks on the graph. In this approach, a specified number of walkers are released per node, and they then traverse the graph according to the "random surfer" model. Similar to the original algorithm, a random surfer follows an outgoing link with probability $\alpha$ or teleports to a random node in the graph with probability $1-\alpha$. Ultimately, the PageRank values are estimated by the relative frequency with which a node was visited by random walkers. The key difference from the iterative approach is that the walkers take a predefined number of steps instead of updating the rank vector until convergence. Thus, the Monte Carlo approach can control memory usage by limiting the number of walkers and steps, making it a promising candidate for approximating the PageRank of large-scale graphs \cite{avrachenkov_monte_2007}. \par
+Additionally, estimating PageRank values is sufficient for many applications. For real-world tasks such as website ranking or user recommendation on social networks, the only things of interest are a node's relative importance and the stability of the ranking. Therefore, total convergence of the PageRank vector is unnecessary. The approximate Monte Carlo approach achieves significant memory and computational savings with only a slight loss in accuracy. This balance between performance and accuracy enables graph analytics on graphs that would otherwise be too large to handle.\par
+Furthermore, implementing Monte Carlo PageRank in a Spark environment utilizes a distributed data processing framework that includes Spark's Resilient Distributed \allowbreak Datasets (RDDs). This data structure can represent the entire graph and the walker's state at every step. Spark's properties, such as fault tolerance through lineage and efficient in-memory computation, make it a more attractive platform than the iterative PageRank method for evaluating the Monte Carlo PageRank method. Of particular interest is whether the Monte Carlo approach can operate under limited memory conditions while achieving sufficient accuracy and maintaining low variance throughout the ranking. \par
+This thesis explores the integration of such an approximate Monte Carlo method in the Spark environment and evaluates it's performance and accuracy on limited memory usage in comparison to the standard GraphX PageRank method.
+ 
 
-
-
-\begin{itemize}
-    \item introduce Monte Carlo approach
-    \item why use spark?
-\end{itemize}
-
-\subsection{Architecture Overview}
+\subsection{Monte Carlo Architecture Overview}
 % Describe how RDDs are used for graph and walker states.
-\begin{itemize}
-    \item describe RDD's or other Data structures used
-\end{itemize}
+The Monte Carlo Implementation is structured around two main components: The graph representation and the walker states. Both of them are stored in Sparks RDDs, which make them suitable for processing in a distributed system. \par
+At the beginning of the program a given edge list file is red to get the structure of the graph. It is stored as an RDD of directed edges. Then by grouping the outgoing neighbors of each node an adjacency list is constructed. Additionally, an array of all vertices is required to support teleportation. This list will be distributed as a broadcasting variable to all nodes. This mitigates costly joins during every teleportation. Because the set of nodes is required in every simulation step it is cached in memory for efficient access. \par
+Next, a fixed number of walkers per node are initialized and represented in an RDD. Each entry in the RDD is a random vertex ID, representing the current vertex of a walker.  
+
+
 
 \subsection{Walker Simulation Logic}
 % Step-by-step random walk simulation, damping, teleportation.
