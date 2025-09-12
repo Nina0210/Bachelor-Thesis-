@@ -1,4 +1,4 @@
-\section{System Design and Methodology}
+\section{Approach}
 \subsection{Motivation for Monte Carlo in Spark}
 % Why Monte Carlo is a promising approach for memory-efficiency.
 The Monte Carlo method is an alternative approach to the traditional PageRank implementation. Instead of iteratively computing the entire rank vector, it focuses on simulating random walks on the graph. In this approach, a specified number of walkers are released per node, and they then traverse the graph according to the "random surfer" model. Similar to the original algorithm, a random surfer follows an outgoing link with probability $\alpha$ or teleports to a random node in the graph with probability $1-\alpha$. Ultimately, the PageRank values are estimated by the relative frequency with which a node was visited by random walkers. The key difference from the iterative approach is that the walkers take a predefined number of steps instead of updating the rank vector until convergence. Thus, the Monte Carlo approach can control memory usage by limiting the number of walkers and steps, making it a promising candidate for approximating the PageRank of large-scale graphs \cite{avrachenkov_monte_2007}. \par
@@ -11,7 +11,9 @@ This thesis explores the integration of such an approximate Monte Carlo method i
 % Describe how RDDs are used for graph and walker states.
 The Monte Carlo Implementation is structured around two main components: The graph representation and the walker states. Both of them are stored in Sparks RDDs, which make them suitable for processing in a distributed system. \par
 At the beginning of the program a given edge list file is red to get the structure of the graph. It is stored as an RDD of directed edges. Then by grouping the outgoing neighbors of each node an adjacency list is constructed. Additionally, an array of all vertices is required to support teleportation. This list will be distributed as a broadcasting variable to all nodes. This mitigates costly joins during every teleportation. Because the set of nodes is required in every simulation step it is cached in memory for efficient access. \par
-Next, a fixed number of walkers per node are initialized and represented in an RDD. Each entry in the RDD is a random vertex ID, representing the current vertex of a walker.  
+Next, a fixed number of walkers per node are initialized and represented in an RDD, that is distributed across multiple partitions to ensure efficient parallel processing. Each entry in the RDD is a random vertex ID, representing the current vertex of a walker. In each simulation step the walker RDD is joined with the adjacency list to get all possible outgoing edges. Then according to the random surfer model, the walker probabilistically decides to take an outgoing edge or to jump to a random node. To ensure deterministic behavior each walker uses a seeded random number generator. In case of a dangling node the walker is always teleporting to a random node. \par
+After each walker updates its position, a new walker RDD is initialized with the updated positions. Since Spark RDDs are lazy, the next position must be materialized before the previous walker RDD is explicitly unpersisted. This ensures that only the current walker RDD and the adjacency list occupy memory. \par 
+Finally, once all steps have been completed, the approximate PageRank values are computed by counting each node's visits and then normalizing the count by the total number of walkers. 
 
 
 
@@ -21,7 +23,11 @@ Next, a fixed number of walkers per node are initialized and represented in an R
     \item explain walker simulation in detail
     \item damping factor
     \item teleportation
-\end{itemize}
+\end{itemize} 
+
+
+
+\subsection{Experimental Framework and Automation}
 
 \subsection{Memory Management Strategy}
 % Describe unpersisting, persisting, and optimizations.

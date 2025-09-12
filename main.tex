@@ -1,4 +1,6 @@
 \documentclass[a4paper,12pt]{article}
+\usepackage{algorithm}
+\usepackage{algorithmic}
 
 % --- Encoding and Language ---
 \usepackage[utf8]{inputenc}
@@ -47,19 +49,12 @@
 \setlength{\parindent}{0pt}
 
 % Logos row (no header package; keeps full textheight)
-\noindent
-\begin{minipage}[t]{0.5\textwidth}
-  \includegraphics[width=0.45\textwidth]{images/Logo_dos.png}
-\end{minipage}%
-\begin{minipage}[t]{0.5\textwidth}
-  \raggedleft
-  \includegraphics[width=0.45\textwidth]{eet-thesis/src/TU_Logo_lang_RGB_rot.pdf}
-\end{minipage}
+
 
 \vspace{8mm}
 
-\hrule   % <<-- draws the horizontal rule
-\vspace{10mm}
+%\hrule   % <<-- draws the horizontal rule
+%\vspace{10mm}
 
 % Header text block (ragged to avoid underfull boxes)
 {\raggedright
@@ -67,6 +62,9 @@ Technical University Berlin\\
 Faculty IV -- Electrical Engineering and Computer Science\\
 Department for Distributed and Operating Systems\par
 }
+\vspace{8mm}
+\hrule   % <<-- draws the horizontal rule
+\vspace{10mm}
 
 \vspace{15mm}
 
@@ -99,8 +97,9 @@ for obtaining the academic degree \\
 % Bottom info block
 \onehalfspacing
 \begin{tabular}{@{}ll}
-Responsible university lecturer: & Prof.\ Dr.\ habil.\ Odej Kao\\
-Supervisor: & Jonathan Will\\
+First examiner: & Prof.\ Dr.\ habil.\ Odej Kao\\
+Second examiner: & Prof. \ Dr. \ Markl \\
+Advisor: & Jonathan Will\\
 Date of submission: & \today
 \end{tabular}
 
@@ -111,20 +110,17 @@ Date of submission: & \today
 \tableofcontents
 \newpage
 
+\input{abstract}
+\newpage
 \input{introduction}
 \newpage
-\input{fundamentals}
+\input{background}
 \newpage
-\input{design}
-\newpage
-\input{implementation}
+\input{approach}
 \newpage
 \input{evaluation}
 \newpage
-\input{discussion}
-\newpage
 \input{conclusion}
-
 \newpage
 \bibliography{references}
 

@@ -1,5 +1,5 @@
 
-\section{Fundamentals}
+\section{Background and Related Work}
 \subsection{The PageRank Algorithm}
 % Describe how PageRank works: power iteration, damping factor, convergence.
 
@@ -15,9 +15,9 @@ The algorithm is based on a graph where each node represents a website on the in
 \end{figure}
 
 To calculate PageRank values, a transition matrix is constructed. Each row of the matrix represents a state or website and contains the probabilities of moving from one node to another. Figure 1 shows that D has two outgoing edges, so the probability of moving from D to another node is $0.5$. The transition matrix describes the behavior of a "random surfer". The random surfer model describes the probability of a random user visiting a website. Finding the PageRank values is a Markov chain process, and its stationary distribution is the PageRank vector. Additionally, to model realistic user behavior, a damping factor is introduced, which is commonly set to 0.85. That means with probability $\alpha$, a random surfer clicks on an outgoing hyperlink on the current website and with probability $1-\alpha$ the surfer "teleports" to a random website in the graph. This characteristic is necessary for PageRank because web graphs may contain dangling nodes, disconnected parts, or cycles. Thus, the damping factor ensures that the Markov chain is irreducible and aperiodic, guaranteeing convergence to a unique stationary distribution \cite{langville_googles_2012}. 
-The PageRank algorithm is commonly defined as follows:
+The PageRank algorithm is commonly defined as follows \cite{chebolu_pagerank_2008}:
 \begin{equation}
-    \pi_v = \frac{1-\alpha}{n}+c\sum_{u\in N^-(v)}\frac{\pi_u}{d^+(u)} \quad\text{\cite{chebolu_pagerank_2008},}
+    \pi_v = \frac{1-\alpha}{n}+c\sum_{u\in N^-(v)}\frac{\pi_u}{d^+(u)} 
 \end{equation} 
 where: 
 \begin{itemize}
