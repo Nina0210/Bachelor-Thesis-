@@ -7,27 +7,11 @@ Furthermore, implementing Monte Carlo PageRank in a Spark environment utilizes a
 This thesis explores the integration of such an approximate Monte Carlo method in the Spark environment and evaluates it's performance and accuracy on limited memory usage in comparison to the standard GraphX PageRank method.
  
 
-\subsection{Monte Carlo Algorithm and Implementation}
+\subsection{Algorithm Design}
 % Describe how RDDs are used for graph and walker states.
-This section presents the Monte Carlo PageRank algorithm and its distributed integration into Apache Spark. As well as the mathematical foundation, the system design will be described.
 
-The approximate Monte Carlo algorithm estimates the stationary distribution by leveraging a step by step simulation that follows the random surfer model. 
-The Monte Carlo Implementation is structured around two main components: The graph representation and the walker states. Both of them are stored in Sparks RDDs, which make them suitable for processing in a distributed system. \par
-At the beginning of the program a given edge list file is red to get the structure of the graph. It is stored as an RDD of directed edges. Then by grouping the outgoing neighbors of each node an adjacency list is constructed, which is one of the main RDD-based components, that is represnting the entire graph structure:
-\vspace{0.5em}
-\begin{lstlisting}[language=Scala, caption={Adjacency list creation}, label={lst:adjlist}]
-val adjList: RDD[(Long, Iterable[Long])] = edgesRDD.groupByKey().cache()
-\end{lstlisting}
-\vspace{0.5em}
-Additionally, an array of all vertices is required to support teleportation. This list will be distributed as a broadcasting variable to all nodes.
-\vspace{0.5em}
-\begin{lstlisting}[language=Scala, caption={Broadcasting Variable}, label={lst:broadcast}]
-val broadcastNodes = sc.broadcast(allNodesArray)
-\end{lstlisting}
-\vspace{0.5em}
-This mitigates costly network shuffles during every teleportation. Because the set of nodes is required in every simulation step it is cached in memory for efficient access. \par
-A fixed number of walkers are initialized and represented in a seperate RDD. The RDD is distributed across multiple partitions to ensure efficient parallel processing and scaling when analyzing large graphs. Each entry in the RDD is a random vertex ID, representing the current vertex of a walker. In each simulation step the walker RDD is joined with the adjacency list to get all possible outgoing edges. After each walker updates its position, a new walker RDD is initialized with the updated positions. Since Spark RDDs are lazy, the next position must be materialized before the previous walker RDD is explicitly unpersisted. This ensures that only the current walker RDD and the adjacency list occupy memory. \par
-The pseudo code bellow presents the walker simulation and the decision logic used in each step. 
+The approximate Monte Carlo algorithm estimates the stationary distribution by leveraging a step by step simulation that follows the random surfer model.
+The pseudo code bellow presents the walker simulation and the decision logic used in each step.
 
 \vspace{2.0em}
 \begin{algorithm}[H]
@@ -36,33 +20,115 @@ The pseudo code bellow presents the walker simulation and the decision logic use
 \KwOut{Approximate PageRank scores $\hat{\pi}(v)$ for all $v \in V$}
 
 \ForEach{node $v \in V$}{
-    Initialize $w$ walkers at $v$
+Initialize $w$ walkers at $v$
 }
 \For{step = 1 to $k$}{
-    \ForEach{walker $i$ at node $u$}{
-        Generate random number $r \in [0,1]$\;
-        \eIf{$r < \alpha$ \textbf{and} $u$ has outlinks}{
-            Move walker to a random neighbor of $u$\;
-        }{
-            Teleport walker to a random node $v \in V$\;
-        }
-    }
+\ForEach{walker $i$ at node $u$}{
+Generate random number $r \in [0,1]$;
+\eIf{$r < \alpha$ \textbf{and} $u$ has outlinks}{
+Move walker to a random neighbor of $u$;
+}{
+Teleport walker to a random node $v \in V$;
+}
+}
 }
 \ForEach{node $v \in V$}{
-    $\hat{\pi}(v) \gets \frac{\text{Number of walkers at } v}{|V| \cdot w}$
+$\hat{\pi}(v) \gets \frac{\text{Number of walkers at } v}{|V| \cdot w}$
 }
 \end{algorithm}
 \vspace{2.0em}
 
-The algorithm initializes $w$ walkers per node, which is resulting in a total number of $w\cdot |V|$ walkers. Each walker is randomly distributed throughout the graph. Then, each walker simultaneously performs a number of $k$ independent steps. \par
+The algorithm initializes $w$ walkers per node, which is resulting in a total number of $w\cdot |V|$ walkers. Each walker is randomly distributed throughout the graph. Then, each walker simultaneously performs a number of $k$ independent steps.
 At each step, the walker $w$ generates a random number between $0$ and $1$. To ensure deterministic behavior, each walker uses a seeded random number generator that guarantees reproducibility:
+
 \vspace{0.5em}
 \begin{lstlisting}[language=Scala, caption={Random Seed}, label={lst:randseed}]
-    val seed = System.nanoTime + Thread .currentThread().getId + step + currentNode.toInt
+val seed = System.nanoTime + Thread .currentThread().getId + step + currentNode.toInt
 \end{lstlisting}
 \vspace{0.5em}
-In case a node does not have any outedges, it's treated as a dangling node and the walker will directly teleport to a random node. \par
-After $k$ steps the simulation stops and the PageRank values are approximated based on the visits of a node. 
+
+In case a node does not have any outedges, it's treated as a dangling node and the walker will directly teleport to a random node.
+After $k$ steps the simulation terminates and the PageRank values are approximated based on the walker visits of a node.
+
+\subsection{Implementation in Spark}
+The Monte Carlo Implementation is structured around two main components: The graph representation and the walker states. Both of them are stored in Sparks RDDs, which make them suitable for processing in a distributed system.
+
+At the beginning of the program a given edge list file is red to get the structure of the graph. It is stored as an RDD of directed edges. Then by grouping the outgoing neighbors of each node an adjacency list is constructed, which is one of the main RDD-based components, that is represnting the entire graph structure:
+
+\vspace{0.5em}
+\begin{lstlisting}[language=Scala, caption={Adjacency list creation}, label={lst:adjlist}]
+val adjList: RDD[(Long, Iterable[Long])] = edgesRDD.groupByKey().cache()
+\end{lstlisting}
+\vspace{0.5em}
+
+Additionally, an array of all vertices is required to support teleportation. This list will be distributed as a broadcasting variable to all nodes.
+
+\vspace{0.5em}
+\begin{lstlisting}[language=Scala, caption={Broadcasting Variable}, label={lst:broadcast}]
+val broadcastNodes = sc.broadcast(allNodesArray)
+\end{lstlisting}
+\vspace{0.5em}
+
+This mitigates costly network shuffles during every teleportation. Because the set of nodes is required in every simulation step it is cached in memory for efficient access.
+A fixed number of walkers are initialized and represented in a seperate RDD. The RDD is distributed across multiple partitions to ensure efficient parallel processing and scaling when analyzing large graphs. Each entry in the RDD is a random vertex ID, representing the current vertex of a walker. In each simulation step the walker RDD is joined with the adjacency list to get all possible outgoing edges. After each walker updates its position, a new walker RDD is initialized with the updated positions. Before the previous walker RDD is explicitly unpersisted after the step is completed, the new walker RDD has to be materialized. 
+
+
+Since Spark RDDs are lazy, the next position must be materialized before the previous walker RDD is explicitly unpersisted. This ensures that only the current walker RDD and the adjacency list occupy memory.
+
+% This section presents the Monte Carlo PageRank algorithm and its distributed integration into Apache Spark. As well as the mathematical foundation, the system design will be described.
+
+% The approximate Monte Carlo algorithm estimates the stationary distribution by leveraging a step by step simulation that follows the random surfer model. 
+% The Monte Carlo Implementation is structured around two main components: The graph representation and the walker states. Both of them are stored in Sparks RDDs, which make them suitable for processing in a distributed system. \par
+% At the beginning of the program a given edge list file is red to get the structure of the graph. It is stored as an RDD of directed edges. Then by grouping the outgoing neighbors of each node an adjacency list is constructed, which is one of the main RDD-based components, that is represnting the entire graph structure:
+% \vspace{0.5em}
+% \begin{lstlisting}[language=Scala, caption={Adjacency list creation}, label={lst:adjlist}]
+% val adjList: RDD[(Long, Iterable[Long])] = edgesRDD.groupByKey().cache()
+% \end{lstlisting}
+% \vspace{0.5em}
+% Additionally, an array of all vertices is required to support teleportation. This list will be distributed as a broadcasting variable to all nodes.
+% \vspace{0.5em}
+% \begin{lstlisting}[language=Scala, caption={Broadcasting Variable}, label={lst:broadcast}]
+% val broadcastNodes = sc.broadcast(allNodesArray)
+% \end{lstlisting}
+% \vspace{0.5em}
+% This mitigates costly network shuffles during every teleportation. Because the set of nodes is required in every simulation step it is cached in memory for efficient access. \par
+% A fixed number of walkers are initialized and represented in a seperate RDD. The RDD is distributed across multiple partitions to ensure efficient parallel processing and scaling when analyzing large graphs. Each entry in the RDD is a random vertex ID, representing the current vertex of a walker. In each simulation step the walker RDD is joined with the adjacency list to get all possible outgoing edges. After each walker updates its position, a new walker RDD is initialized with the updated positions. Since Spark RDDs are lazy, the next position must be materialized before the previous walker RDD is explicitly unpersisted. This ensures that only the current walker RDD and the adjacency list occupy memory. \par
+% The pseudo code bellow presents the walker simulation and the decision logic used in each step. 
+
+% \vspace{2.0em}
+% \begin{algorithm}[H]
+% \caption{Monte Carlo PageRank Approximation}
+% \KwIn{Graph $G=(V,E)$, walkers per node $w$, number of steps $k$, damping factor $\alpha$}
+% \KwOut{Approximate PageRank scores $\hat{\pi}(v)$ for all $v \in V$}
+
+% \ForEach{node $v \in V$}{
+%     Initialize $w$ walkers at $v$
+% }
+% \For{step = 1 to $k$}{
+%     \ForEach{walker $i$ at node $u$}{
+%         Generate random number $r \in [0,1]$\;
+%         \eIf{$r < \alpha$ \textbf{and} $u$ has outlinks}{
+%             Move walker to a random neighbor of $u$\;
+%         }{
+%             Teleport walker to a random node $v \in V$\;
+%         }
+%     }
+% }
+% \ForEach{node $v \in V$}{
+%     $\hat{\pi}(v) \gets \frac{\text{Number of walkers at } v}{|V| \cdot w}$
+% }
+% \end{algorithm}
+% \vspace{2.0em}
+
+% The algorithm initializes $w$ walkers per node, which is resulting in a total number of $w\cdot |V|$ walkers. Each walker is randomly distributed throughout the graph. Then, each walker simultaneously performs a number of $k$ independent steps. \par
+% At each step, the walker $w$ generates a random number between $0$ and $1$. To ensure deterministic behavior, each walker uses a seeded random number generator that guarantees reproducibility:
+% \vspace{0.5em}
+% \begin{lstlisting}[language=Scala, caption={Random Seed}, label={lst:randseed}]
+%     val seed = System.nanoTime + Thread .currentThread().getId + step + currentNode.toInt
+% \end{lstlisting}
+% \vspace{0.5em}
+% In case a node does not have any outedges, it's treated as a dangling node and the walker will directly teleport to a random node. \par
+% After $k$ steps the simulation stops and the PageRank values are approximated based on the visits of a node. 
 
 
 \subsection{Experimental Framework and Automation}
