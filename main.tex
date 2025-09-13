@@ -2,7 +2,18 @@
 %\usepackage{algorithm}
 %\usepackage{algorithmic}
 \usepackage[ruled,vlined]{algorithm2e}
-
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{float} % for the [H] specifier
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{red},
+  showstringspaces=false,
+  frame=single,
+  breaklines=true
+}
 
 % --- Encoding and Language ---
 \usepackage[utf8]{inputenc}
