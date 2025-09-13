@@ -7,8 +7,6 @@
 \SetKw{KwTo}{to}
 \SetKw{KwStep}{step}
 \SetKwFor{ForEach}{for each}{do}{}  % only if you use \ForEach
-
-
 \usepackage{listings}
 \usepackage{xcolor}
 %\usepackage{float} % for the [H] specifier
@@ -21,40 +19,43 @@
   frame=single,
   breaklines=true
 }
-
 % --- Encoding and Language ---
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
-
 % --- Layout ---
 \usepackage{geometry}
 \usepackage{setspace}
 \onehalfspacing
-
-
-
-
 %\geometry{a4paper, margin=1in}
 \geometry{a4paper, left = 3cm, right = 3cm, top = 2cm, bottom = 4cm}
-\usepackage{setspace} % for \onehalfspacing
-
-% --- Section Titles ---
+% --- Section Titles with INCREASED SPACING ---
 \usepackage{titlesec}
-\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
-\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
-
+% Make sections much bigger and add MORE space from top of page
+\titleformat{\section}
+  {\normalfont\huge\bfseries}  
+  {\thesection}{1em}{}
+\titlespacing*{\section}
+  {0pt}     % left margin
+  {8ex}     % INCREASED space from top of page (fixed value, no stretch)
+  {3.5ex plus .3ex}            % INCREASED space after section title
+% Make subsections bigger with MORE space before
+\titleformat{\subsection}
+  {\normalfont\Large\bfseries}  
+  {\thesubsection}{1em}{}
+\titlespacing*{\subsection}
+  {0pt}     % left margin  
+  {5ex plus 1.5ex minus .2ex}  % INCREASED space before (was 3.5ex, now 5ex)
+  {2.5ex plus .3ex}            % INCREASED space after (was 2ex, now 2.5ex)
 % --- Math and Graphics ---
 \usepackage{amsmath, amssymb}
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{caption}
 \usepackage{subcaption}
-
 % --- Bibliography (natbib) ---
 \usepackage[numbers]{natbib} % or [authoryear]
 \bibliographystyle{plainnat}
-
 % --- Hyperlinks (load after natbib) ---
 \usepackage{hyperref}
 \hypersetup{
@@ -63,26 +64,18 @@
     citecolor=blue,
     urlcolor=blue,
 }
-
 % --- Title info ---
 \title{Memory-efficient PageRank on Apache Spark\\ via Random Walks}
 \author{Nina Michalek \\ TU Berlin, DOS}
 \date{October 28, 2025}
-
 \begin{document}
-
 % --- Title Page (no running headers/footers here) ---
 \begin{titlepage}
 \setlength{\parindent}{0pt}
-
 % Logos row (no header package; keeps full textheight)
-
-
 \vspace{8mm}
-
 %\hrule   % <<-- draws the horizontal rule
 %\vspace{10mm}
-
 % Header text block (ragged to avoid underfull boxes)
 {\raggedright
 Technical University Berlin\\
@@ -92,16 +85,12 @@ Department for Distributed and Operating Systems\par
 \vspace{8mm}
 \hrule   % <<-- draws the horizontal rule
 \vspace{10mm}
-
 \vspace{15mm}
-
 \begin{center}
 \Large Bachelor Thesis\\[15mm]
 \Huge \textbf{Memory-efficient PageRank on Apache Spark\\ via Random Walks}
 \end{center}
-
 \vspace{10mm}
-
 % Centered "submitted by" block
 \begin{center}
 \begin{tabular}{rl}
@@ -109,18 +98,14 @@ submitted by: & Nina Michalek \\
 Matrikel-Nr.: & 469109 \\
 \end{tabular}
 \end{center}
-
 \vspace{8mm}
-
 \begin{center}
 \onehalfspacing
 for obtaining the academic degree \\
 \large \textbf{Bachelor of Science} \\
 \normalsize (B.\,Sc.)
 \end{center}
-
 \vfill
-
 % Bottom info block
 \onehalfspacing
 \begin{tabular}{@{}ll}
@@ -129,26 +114,28 @@ Second examiner: & Prof. \ Dr. \ Markl \\
 Advisor: & Jonathan Will\\
 Date of submission: & \today
 \end{tabular}
-
 \end{titlepage}
 % --- End Title Page ---
-
 % --- TOC + Main Document ---
 \tableofcontents
 \newpage
-
+\vspace*{4ex}  % Add space at top of page before content
 \input{abstract}
 \newpage
+\vspace*{4ex}  % Add space at top of page before content
 \input{introduction}
 \newpage
+\vspace*{4ex}  % Add space at top of page before content
 \input{background}
 \newpage
+\vspace*{4ex}  % Add space at top of page before content
 \input{approach}
 \newpage
+\vspace*{4ex}  % Add space at top of page before content
 \input{evaluation}
 \newpage
+\vspace*{4ex}  % Add space at top of page before content
 \input{conclusion}
 \newpage
 \bibliography{references}
-
 \end{document}
