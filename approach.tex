@@ -7,31 +7,59 @@ Furthermore, implementing Monte Carlo PageRank in a Spark environment utilizes a
 This thesis explores the integration of such an approximate Monte Carlo method in the Spark environment and evaluates it's performance and accuracy on limited memory usage in comparison to the standard GraphX PageRank method.
  
 
-\subsection{Monte Carlo Architecture Overview}
+\subsection{System Architecture and Data Flow}
 % Describe how RDDs are used for graph and walker states.
 The Monte Carlo Implementation is structured around two main components: The graph representation and the walker states. Both of them are stored in Sparks RDDs, which make them suitable for processing in a distributed system. \par
 At the beginning of the program a given edge list file is red to get the structure of the graph. It is stored as an RDD of directed edges. Then by grouping the outgoing neighbors of each node an adjacency list is constructed. Additionally, an array of all vertices is required to support teleportation. This list will be distributed as a broadcasting variable to all nodes. This mitigates costly joins during every teleportation. Because the set of nodes is required in every simulation step it is cached in memory for efficient access. \par
-Next, a fixed number of walkers per node are initialized and represented in an RDD, that is distributed across multiple partitions to ensure efficient parallel processing. Each entry in the RDD is a random vertex ID, representing the current vertex of a walker. In each simulation step the walker RDD is joined with the adjacency list to get all possible outgoing edges. Then according to the random surfer model, the walker probabilistically decides to take an outgoing edge or to jump to a random node. To ensure deterministic behavior each walker uses a seeded random number generator. In case of a dangling node the walker is always teleporting to a random node. \par
-After each walker updates its position, a new walker RDD is initialized with the updated positions. Since Spark RDDs are lazy, the next position must be materialized before the previous walker RDD is explicitly unpersisted. This ensures that only the current walker RDD and the adjacency list occupy memory. \par 
-Finally, once all steps have been completed, the approximate PageRank values are computed by counting each node's visits and then normalizing the count by the total number of walkers. 
+A fixed number of walkers are initialized and represented in a seperate RDD. The RDD is distributed across multiple partitions to ensure efficient parallel processing and scaling when analyzing large graphs. In the core part, the walker simulation, a new walker RDD is created within every step with updated walker positions. To control memory usage, the previous walker RDD is explicitly unpersisted after the new step has been materialized. \par
+Finally, the PageRank values are estimated based on the visits of a node, normalized by the total number of walkers. 
+
+% Each entry in the RDD is a random vertex ID, representing the current vertex of a walker. In each simulation step the walker RDD is joined with the adjacency list to get all possible outgoing edges. Then according to the random surfer model, the walker probabilistically decides to take an outgoing edge or to jump to a random node. To ensure deterministic behavior each walker uses a seeded random number generator. In case of a dangling node the walker is always teleporting to a random node. \par
+% After each walker updates its position, a new walker RDD is initialized with the updated positions. Since Spark RDDs are lazy, the next position must be materialized before the previous walker RDD is explicitly unpersisted. This ensures that only the current walker RDD and the adjacency list occupy memory. \par 
+% Finally, once all steps have been completed, the approximate PageRank values are computed by counting each node's visits and then normalizing the count by the total number of walkers. 
 
 
 
-\subsection{Walker Simulation Logic}
+\subsection{Monte Carlo Algorithm Design}
 % Step-by-step random walk simulation, damping, teleportation.
-\begin{itemize}
-    \item explain walker simulation in detail
-    \item damping factor
-    \item teleportation
-\end{itemize} 
+
+The Monte Carlo PageRank algorithm is a step by step simulation that follows the random surfer model. 
+The pseudo code bellow describes the algorithm used in this thesis. 
+
+\vspace{0.5em}
+\begin{algorithm}[H]
+\caption{Monte Carlo PageRank Approximation}
+\KwIn{Graph $G=(V,E)$, walkers per node $w$, number of steps $k$, damping factor $\alpha$}
+\KwOut{Approximate PageRank scores $\hat{\pi}(v)$ for all $v \in V$}
+
+\ForEach{node $v \in V$}{
+    Initialize $w$ walkers at $v$
+}
+\For{step = 1 to $k$}{
+    \ForEach{walker $i$ at node $u$}{
+        Generate random number $r \in [0,1]$\;
+        \eIf{$r < \alpha$ \textbf{and} $u$ has outlinks}{
+            Move walker to a random neighbor of $u$\;
+        }{
+            Teleport walker to a random node $v \in V$\;
+        }
+    }
+}
+\ForEach{node $v \in V$}{
+    $\hat{\pi}(v) \gets \frac{\text{Number of walkers at } v}{|V| \cdot w}$
+}
+\end{algorithm}
+\vspace{0.5em}
+
+First, the algorithm first initializes $w$ walkers per node, which is resulting in a total number of $w\cdot |V|$ walkers. Each walker is randomly distributed throughout the graph. Then, each walker simultaneously performs a number of $k$ independent steps. \par
+At each step, the walker $w$ generates a random number between 
 
 
 
-\subsection{Experimental Framework and Automation}
+\subsection{Spark Implementation Details}
+
 
 \subsection{Memory Management Strategy}
 % Describe unpersisting, persisting, and optimizations.
-\begin{itemize}
-    \item describe persisting and unpersisting of RDD's
-    \item maybe already mention improvements
-\end{itemize}
+
+ 
