@@ -25,7 +25,7 @@ Initialize $w$ walkers at $v$
 \For{step = 1 to $k$}{
 \ForEach{walker $i$ at node $u$}{
 Generate random number $r \in [0,1]$;
-\eIf{$r < \alpha$ \textbf{and} $u$ has outlinks}{
+\eIf{$r < \alpha$ \textbf{and} $u$ has out-edges}{
 Move walker to a random neighbor of $u$;
 }{
 Teleport walker to a random node $v \in V$;
@@ -70,71 +70,44 @@ val broadcastNodes = sc.broadcast(allNodesArray)
 \vspace{0.5em}
 
 This mitigates costly network shuffles during every teleportation. Because the set of nodes is required in every simulation step it is cached in memory for efficient access.
-A fixed number of walkers are initialized and represented in a seperate RDD. The RDD is distributed across multiple partitions to ensure efficient parallel processing and scaling when analyzing large graphs. Each entry in the RDD is a random vertex ID, representing the current vertex of a walker. In each simulation step the walker RDD is joined with the adjacency list to get all possible outgoing edges. After each walker updates its position, a new walker RDD is initialized with the updated positions. Before the previous walker RDD is explicitly unpersisted after the step is completed, the new walker RDD has to be materialized. 
+A fixed number of walkers are initialized and represented in a seperate RDD. The RDD is distributed across multiple partitions to ensure efficient parallel processing and scaling when analyzing large graphs. Each entry in the RDD is a random vertex ID, representing the current vertex of a walker. In each simulation step the walker RDD is joined with the adjacency list to get all possible outgoing edges. After each walker updates its position, a new walker RDD is initialized with the updated positions. Before the previous walker RDD is explicitly unpersisted after the step is completed, the new walker RDD has to be materialized.
 
-
-Since Spark RDDs are lazy, the next position must be materialized before the previous walker RDD is explicitly unpersisted. This ensures that only the current walker RDD and the adjacency list occupy memory.
-
-% This section presents the Monte Carlo PageRank algorithm and its distributed integration into Apache Spark. As well as the mathematical foundation, the system design will be described.
-
-% The approximate Monte Carlo algorithm estimates the stationary distribution by leveraging a step by step simulation that follows the random surfer model. 
-% The Monte Carlo Implementation is structured around two main components: The graph representation and the walker states. Both of them are stored in Sparks RDDs, which make them suitable for processing in a distributed system. \par
-% At the beginning of the program a given edge list file is red to get the structure of the graph. It is stored as an RDD of directed edges. Then by grouping the outgoing neighbors of each node an adjacency list is constructed, which is one of the main RDD-based components, that is represnting the entire graph structure:
-% \vspace{0.5em}
-% \begin{lstlisting}[language=Scala, caption={Adjacency list creation}, label={lst:adjlist}]
-% val adjList: RDD[(Long, Iterable[Long])] = edgesRDD.groupByKey().cache()
-% \end{lstlisting}
-% \vspace{0.5em}
-% Additionally, an array of all vertices is required to support teleportation. This list will be distributed as a broadcasting variable to all nodes.
-% \vspace{0.5em}
-% \begin{lstlisting}[language=Scala, caption={Broadcasting Variable}, label={lst:broadcast}]
-% val broadcastNodes = sc.broadcast(allNodesArray)
-% \end{lstlisting}
-% \vspace{0.5em}
-% This mitigates costly network shuffles during every teleportation. Because the set of nodes is required in every simulation step it is cached in memory for efficient access. \par
-% A fixed number of walkers are initialized and represented in a seperate RDD. The RDD is distributed across multiple partitions to ensure efficient parallel processing and scaling when analyzing large graphs. Each entry in the RDD is a random vertex ID, representing the current vertex of a walker. In each simulation step the walker RDD is joined with the adjacency list to get all possible outgoing edges. After each walker updates its position, a new walker RDD is initialized with the updated positions. Since Spark RDDs are lazy, the next position must be materialized before the previous walker RDD is explicitly unpersisted. This ensures that only the current walker RDD and the adjacency list occupy memory. \par
-% The pseudo code bellow presents the walker simulation and the decision logic used in each step. 
-
-% \vspace{2.0em}
-% \begin{algorithm}[H]
-% \caption{Monte Carlo PageRank Approximation}
-% \KwIn{Graph $G=(V,E)$, walkers per node $w$, number of steps $k$, damping factor $\alpha$}
-% \KwOut{Approximate PageRank scores $\hat{\pi}(v)$ for all $v \in V$}
-
-% \ForEach{node $v \in V$}{
-%     Initialize $w$ walkers at $v$
-% }
-% \For{step = 1 to $k$}{
-%     \ForEach{walker $i$ at node $u$}{
-%         Generate random number $r \in [0,1]$\;
-%         \eIf{$r < \alpha$ \textbf{and} $u$ has outlinks}{
-%             Move walker to a random neighbor of $u$\;
-%         }{
-%             Teleport walker to a random node $v \in V$\;
-%         }
-%     }
-% }
-% \ForEach{node $v \in V$}{
-%     $\hat{\pi}(v) \gets \frac{\text{Number of walkers at } v}{|V| \cdot w}$
-% }
-% \end{algorithm}
-% \vspace{2.0em}
-
-% The algorithm initializes $w$ walkers per node, which is resulting in a total number of $w\cdot |V|$ walkers. Each walker is randomly distributed throughout the graph. Then, each walker simultaneously performs a number of $k$ independent steps. \par
-% At each step, the walker $w$ generates a random number between $0$ and $1$. To ensure deterministic behavior, each walker uses a seeded random number generator that guarantees reproducibility:
-% \vspace{0.5em}
-% \begin{lstlisting}[language=Scala, caption={Random Seed}, label={lst:randseed}]
-%     val seed = System.nanoTime + Thread .currentThread().getId + step + currentNode.toInt
-% \end{lstlisting}
-% \vspace{0.5em}
-% In case a node does not have any outedges, it's treated as a dangling node and the walker will directly teleport to a random node. \par
-% After $k$ steps the simulation stops and the PageRank values are approximated based on the visits of a node. 
+\begin{lstlisting}[language=Scala, caption={Materializing and Unpersisting Walker RDD}, label={lst:materialize}]
+nextWalkersRDD.cache() 
+nextWalkersRDD.count() // trigger an action to materialze RDD
+walkersRDD.unpersist(blocking = false)
+\end{lstlisting}
+\vspace{0.5em}
+This is because Spark uses lazy evaluation. It ensures that only the current walker RDD and the adjacency list occupy memory. \par
+Furthermore to improve parallelism 
 
 
 \subsection{Experimental Framework and Automation}
-% Step-by-step random walk simulation, damping, teleportation.
 
+Finally, to evaluate the performance of the approximate Monte Carlo method an experimental framework was established, that aims for reproducibility. It benchmarks the Monte Carlo method and compares it to the standard PageRank method. The evaluation is focusing mainly on memory efficiency while trading off performance and accuracy. \par
+The datasets used for evaluation include both real-world and synthetic graphs. Real-world graphs such as wiki-Talk provide an irregular graph structure and millions of edges, presenting a practical use case. On the other hand, synthetic graphs of any size and with different characteristics can be generated. In the experiments, Erdős–Rényi graphs of different sizes, ranging from $100.000$ to $20$ million nodes, have been generated. To establish comparable conditions between the different graph sizes, the density is kept consistent by controlling the number of outgoing edges per node. However, the in-degree of each node is random and ranges between $0$ and $n-1$, where $n$ is the total number of nodes. A simple python script is used to generate and store the graph structure in an edge list file.
 
+\begin{algorithm}[H]
+\caption{Synthetic Graph Generator}
+\KwIn{Range of node counts $[N_{\min}, N_{\max}]$, step size $\Delta N$, edges per node $E$}
+\KwOut{Synthetic graph files with $E$ outgoing edges per node}
 
+Set random seed for reproducibility\;
+\For{$n \gets N_{\min}$ \KwTo $N_{\max}$ \KwStep $\Delta N$}{
+  Create output file for graph with $n$ nodes\;
+  \ForEach{node $u \in \{1, \dots, n\}$}{
+    \For{$i \gets 1$ \KwTo $E$}{
+      Select random destination $v \in \{1, \dots, n\}$\;
+      \If{$v \neq u$}{
+        Write edge $(u, v)$ to file\;
+      }
+    }
+  }
+  Print confirmation of generated graph with $n$ nodes and $n \cdot E$ edges\;
+}
+\end{algorithm} 
 
- 
+The output can be directly used for Spark processing.\par
+During the experiments, the main parameters of the Monte Carlo method have been varied. The parameters include the number of walkers and the number of steps per walker. The goal was to systematically compare performance, memory and runtime across varying parameters. In the GraphX implementation the only parameters that were configured are the tolerance and the damping factor. The tolerance is usually set to $0.001$. In the experiments it was kept on such a low value to get very precise PageRank values and to compare the approximate Monte Carlo approach to the standard PageRank method. The damping factor was set to $0.15$ for both methods. Additionally, different Spark configurations were analyzed such as the number of executors and most importantly the memory allocated per executor. \par
+To automate the experiments, shell scripts are used. Each script relies on spark-submit, which is the standard command line tool used to launch applications on a Spark cluster. In the spark-submit command configurations such as the number of executors and the memory per executor can be set. Furthermore, the edge list file is passed to the script as well as the Monte Carlo specific configuration such as the number of walkers and steps per walker. This setup ensures that experiments are running in a sequence without needing manual input and with consistency throughout multiple data sets. Finally, the spark-submit command allows to either run the applications locally or to launch them to a cluster environment to simulate a real distributed system. \par
+In every 

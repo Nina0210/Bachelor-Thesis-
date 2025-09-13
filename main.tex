@@ -2,9 +2,16 @@
 %\usepackage{algorithm}
 %\usepackage{algorithmic}
 \usepackage[ruled,vlined]{algorithm2e}
+\SetKwInput{KwIn}{Input}
+\SetKwInput{KwOut}{Output}
+\SetKw{KwTo}{to}
+\SetKw{KwStep}{step}
+\SetKwFor{ForEach}{for each}{do}{}  % only if you use \ForEach
+
+
 \usepackage{listings}
 \usepackage{xcolor}
-\usepackage{float} % for the [H] specifier
+%\usepackage{float} % for the [H] specifier
 \lstset{
   basicstyle=\ttfamily\footnotesize,
   keywordstyle=\color{blue},
@@ -22,7 +29,14 @@
 
 % --- Layout ---
 \usepackage{geometry}
-\geometry{a4paper, margin=1in}
+\usepackage{setspace}
+\onehalfspacing
+
+
+
+
+%\geometry{a4paper, margin=1in}
+\geometry{a4paper, left = 3cm, right = 3cm, top = 2cm, bottom = 4cm}
 \usepackage{setspace} % for \onehalfspacing
 
 % --- Section Titles ---
