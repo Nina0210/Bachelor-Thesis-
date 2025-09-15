@@ -25,7 +25,7 @@ Initialize $w$ walkers at $v$
 \For{step = 1 to $k$}{
 \ForEach{walker $i$ at node $u$}{
 Generate random number $r \in [0,1]$;
-\eIf{$r < \alpha$ \textbf{and} $u$ has out-edges}{
+\eIf{$r < \alpha$ \textbf{and} $u$ has outgoing edges}{
 Move walker to a random neighbor of $u$;
 }{
 Teleport walker to a random node $v \in V$;
@@ -53,7 +53,7 @@ After $k$ steps the simulation terminates and the PageRank values are approximat
 \subsection{Implementation in Spark}
 The Monte Carlo Implementation is structured around two main components: The graph representation and the walker states. Both of them are stored in Sparks RDDs, which make them suitable for processing in a distributed system.
 
-At the beginning of the program a given edge list file is red to get the structure of the graph. It is stored as an RDD of directed edges. Then by grouping the outgoing neighbors of each node an adjacency list is constructed, which is one of the main RDD-based components, that is represnting the entire graph structure:
+At the beginning of the program a given edge list file is read to get the structure of the graph. It is stored as an RDD of directed edges. Then by grouping the outgoing neighbors of each node an adjacency list is constructed, which is one of the main RDD-based components, that is represnting the entire graph structure:
 
 \vspace{0.5em}
 \begin{lstlisting}[language=Scala, caption={Adjacency list creation}, label={lst:adjlist}]
@@ -109,10 +109,17 @@ Set random seed for reproducibility\;
 \end{algorithm} 
 
 The output can be directly used for Spark processing.\par
-During the experiments, the main parameters of the Monte Carlo method have been varied. The parameters include the number of walkers and the number of steps per walker. The goal was to systematically compare performance, memory and runtime across varying parameters. In the GraphX implementation the only parameters that were configured are the tolerance and the damping factor. The tolerance is usually set to $0.001$. In the experiments it was kept on such a low value to get very precise PageRank values and to compare the approximate Monte Carlo approach to the standard PageRank method. The damping factor was set to $0.15$ for both methods. Additionally, different Spark configurations were analyzed such as the number of executors and most importantly the memory allocated per executor. \par
+During the experiments, the main parameters of the Monte Carlo method have been varied. The parameters include the number of walkers and the number of steps per walker. The goal was to systematically compare performance, memory and runtime across varying parameters. In the GraphX implementation the only parameters that were configured are the tolerance and the damping factor. The tolerance is usually set to $0.001$. In the experiments it was kept on such a low value to get very precise PageRank values and to compare the approximate Monte Carlo approach to the standard PageRank method. The reset probability was set to $0.15$ for both methods. Additionally, different Spark configurations were analyzed such as the number of executors and most importantly the memory allocated per executor. \par
+
+
+
 To automate the experiments, shell scripts are used. Each script relies on spark-submit, which is the standard command line tool used to launch applications on a Spark cluster. In the spark-submit command configurations such as the number of executors and the memory per executor can be set. Furthermore, the edge list file is passed to the script as well as the Monte Carlo specific configuration such as the number of walkers and steps per walker. This setup ensures that experiments are running in a sequence without needing manual input and with consistency throughout multiple data sets. Finally, the spark-submit command allows to either run the applications locally or to launch them to a cluster environment to simulate a real distributed system. \par
+
+To ensure a distributed system that provides a comparable environment, a Spark cluster on the university server was created 
+
+
 In every experiment, metrics for both methods are collected, including configurations such as the number of walkers and steps for the Monte Carlo method. Another file collects the total runtime, allocated memory, and graph size to evaluate performance with limited memory and with different graph sizes. For accuracy evaluation, the top 20 ranks for both methods are saved in a separate file. \par
 All the collected data is saved in CSV files to efficiently analyze it in the next step. With the help of Python scripts and the use of libraries such as Matplotlib and Pandas, the data is structured and visualized in various plots of runtime, allocated memory, accuracy and cost. This provides a clear overview of the data and enables a thorough analysis of the data. \par
 This setup ensures the reproducibility and scalability of evaluating the Monte Carlo method. This is achieved through the use of various datasets, such as real-world and synthetic data, as well as a systematic variation in parameters. Additionally, scripts automate experiments and efficiently collect key metrics. This framework enables the analysis of the empirical results presented in the following sections. \par
 
-In summary, the given approach combines the approximate Monte Carlo  implementation with the distributed Spark environment and a systematic experimental framework. The main goal of this setup is to find out wether the described method is able to operate on very limited memory compared to the standard PageRank implementation. Although, a trade-off in accuracy and performance is expected and tolerated, the method aims to achieve sufficient accuracy and performance. The evaluation will reveal if the Monte Carlo approach provides a viable alternative to the standard PageRank method in an environment with restricted memory and large-scale graphs.
+Finally, the given approach combines an approximate Monte Carlo implementation with a distributed Spark environment and a systematic experimental framework. The main goal of this setup is to determine whether the described method can operate with much less memory than the standard PageRank implementation. While a trade-off in accuracy and performance is expected and tolerated, the method aims to provide sufficient accuracy and performance. The evaluation will reveal whether the Monte Carlo approach is a viable alternative to the standard PageRank method in environments with restricted memory and large-scale graphs, addressing the central research question of this thesis.
