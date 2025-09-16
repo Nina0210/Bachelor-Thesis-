@@ -1,6 +1,11 @@
 \section{Approach}
 \subsection{Motivation for Monte Carlo in Spark}
 % Why Monte Carlo is a promising approach for memory-efficiency.
+\subsubsection{Limitations of Iterative PageRank}
+\subsubsection{Idea of Monte Carlo Random Walks}
+\subsubsection{Approximation vs. Convergence Trade-off}
+\subsubsection{Advantages in Spark Environments}
+
 The Monte Carlo method is an alternative approach to the traditional PageRank implementation. Instead of iteratively computing the entire rank vector, it focuses on simulating random walks on the graph. In this approach, a specified number of walkers are released per node, and they then traverse the graph according to the "random surfer" model. Similar to the original algorithm, a random surfer follows an outgoing link with probability $\alpha$ or teleports to a random node in the graph with probability $1-\alpha$. Ultimately, the PageRank values are estimated by the relative frequency with which a node was visited by random walkers. The key difference from the iterative approach is that the walkers take a predefined number of steps instead of updating the rank vector until convergence. Thus, the Monte Carlo approach can control memory usage by limiting the number of walkers and steps, making it a promising candidate for approximating the PageRank of large-scale graphs \cite{avrachenkov_monte_2007}. \par
 Additionally, estimating PageRank values is sufficient for many applications. For real-world tasks such as website ranking or user recommendation on social networks, the only things of interest are a node's relative importance and the stability of the ranking. Therefore, total convergence of the PageRank vector is unnecessary. The approximate Monte Carlo approach achieves significant memory and computational savings with only a slight loss in accuracy. This balance between performance and accuracy enables graph analytics on graphs that would otherwise be too large to handle.\par
 Furthermore, implementing Monte Carlo PageRank in a Spark environment utilizes a distributed data processing framework that includes Spark's Resilient Distributed \allowbreak Datasets (RDDs). This data structure can represent the entire graph and the walker's state at every step. Spark's properties, such as fault tolerance through lineage and efficient in-memory computation, make it a more attractive platform than the iterative PageRank method for evaluating the Monte Carlo PageRank method. Of particular interest is whether the Monte Carlo approach can operate under limited memory conditions while achieving sufficient accuracy and maintaining low variance throughout the ranking. \par
@@ -9,6 +14,12 @@ This thesis explores the integration of such an approximate Monte Carlo method i
 
 \subsection{Algorithm Design}
 % Describe how RDDs are used for graph and walker states.
+
+\subsubsection{Initialization of Walkers}
+\subsubsection{Step-by-Step Simulation Process}
+\subsubsection{Random Number Generation and Reproducibility}
+\subsubsection{Handling Dangling Nodes}
+\subsubsection{Computation of Approximate PageRank Scores}
 
 The approximate Monte Carlo algorithm estimates the stationary distribution by leveraging a step by step simulation that follows the random surfer model.
 The pseudo code bellow presents the walker simulation and the decision logic used in each step.
@@ -51,6 +62,13 @@ In case a node does not have any outedges, it's treated as a dangling node and t
 After $k$ steps the simulation terminates and the PageRank values are approximated based on the walker visits of a node.
 
 \subsection{Implementation in Spark}
+\subsubsection{Graph Representation with RDDs}
+\subsubsection{Adjacency List Construction}
+\subsubsection{Broadcasting for Teleportation}
+\subsubsection{Walker State Representation and Distribution}
+\subsubsection{RDD Caching, Materialization, and Unpersisting}
+\subsubsection{Repartitioning for Load Balancing}
+
 The Monte Carlo Implementation is structured around two main components: The graph representation and the walker states. Both of them are stored in Sparks RDDs, which make them suitable for processing in a distributed system.
 
 At the beginning of the program a given edge list file is read to get the structure of the graph. It is stored as an RDD of directed edges. Then by grouping the outgoing neighbors of each node an adjacency list is constructed, which is one of the main RDD-based components, that is represnting the entire graph structure:
@@ -84,6 +102,13 @@ When processing large graphs that include nodes with high ingoing edges it preve
 
 
 \subsection{Experimental Framework and Automation}
+
+\subsubsection{Datasets: Real-World and Synthetic Graphs}
+\subsubsection{Synthetic Graph Generation}
+\subsubsection{Parameter Variation in Experiments}
+\subsubsection{Spark Cluster Setup}
+\subsubsection{Automation via Shell Scripts}
+\subsubsection{Data Collection and Visualization}
 
 Finally, to evaluate the performance of the approximate Monte Carlo method an experimental framework was established, that aims for reproducibility. It benchmarks the Monte Carlo method and compares it to the standard PageRank method. The evaluation is focusing mainly on memory efficiency while trading off performance and accuracy. \par
 The datasets used for evaluation include both real-world and synthetic graphs. Real-world graphs such as wiki-Talk provide an irregular graph structure and millions of edges, presenting a practical use case. On the other hand, synthetic graphs of any size and with different characteristics can be generated. In the experiments, Erdős–Rényi graphs of different sizes, ranging from $100.000$ to $20$ million nodes, have been generated. To establish comparable conditions between the different graph sizes, the density is kept consistent by controlling the number of outgoing edges per node. However, the in-degree of each node is random and ranges between $0$ and $n-1$, where $n$ is the total number of nodes. A simple python script is used to generate and store the graph structure in an edge list file.
@@ -123,3 +148,8 @@ All the collected data is saved in CSV files to efficiently analyze it in the ne
 This setup ensures the reproducibility and scalability of evaluating the Monte Carlo method. This is achieved through the use of various datasets, such as real-world and synthetic data, as well as a systematic variation in parameters. Additionally, scripts automate experiments and efficiently collect key metrics. This framework enables the analysis of the empirical results presented in the following sections. \par
 
 Finally, the given approach combines an approximate Monte Carlo implementation with a distributed Spark environment and a systematic experimental framework. The main goal of this setup is to determine whether the described method can operate with much less memory than the standard PageRank implementation. While a trade-off in accuracy and performance is expected and tolerated, the method aims to provide sufficient accuracy and performance. The evaluation will reveal whether the Monte Carlo approach is a viable alternative to the standard PageRank method in environments with restricted memory and large-scale graphs, addressing the central research question of this thesis.
+
+\subsection{Error Handling}
+\subsubsection{Out-of-Memory Handling}
+\subsubsection{Crash Scenarios Encountered During Experiments}
+\subsubsection{Timeout: How and when to cancel an Experiment}
