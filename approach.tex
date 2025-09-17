@@ -24,7 +24,7 @@ This thesis explores the integration of such an approximate Monte Carlo method i
 The approximate Monte Carlo algorithm estimates the stationary distribution by leveraging a step by step simulation that follows the random surfer model.
 The pseudo code bellow presents the walker simulation and the decision logic used in each step.
 
-\vspace{2.0em}
+\vspace{1.5em}
 \begin{algorithm}[H]
 \caption{Monte Carlo PageRank Approximation}
 \KwIn{Graph $G=(V,E)$, walkers per node $w$, number of steps $k$, damping factor $\alpha$}
@@ -47,7 +47,7 @@ Teleport walker to a random node $v \in V$;
 $\hat{\pi}(v) \gets \frac{\text{Number of walkers at } v}{|V| \cdot w}$
 }
 \end{algorithm}
-\vspace{2.0em}
+\vspace{1.5em}
 
 The algorithm initializes $w$ walkers per node, which is resulting in a total number of $w\cdot |V|$ walkers. Each walker is randomly distributed throughout the graph. Then, each walker simultaneously performs a number of $k$ independent steps.
 At each step, the walker $w$ generates a random number between $0$ and $1$. To ensure deterministic behavior, each walker uses a seeded random number generator that guarantees reproducibility:
@@ -113,6 +113,7 @@ When processing large graphs that include nodes with high ingoing edges it preve
 Finally, to evaluate the performance of the approximate Monte Carlo method an experimental framework was established, that aims for reproducibility. It benchmarks the Monte Carlo method and compares it to the standard PageRank method. The evaluation is focusing mainly on memory efficiency while trading off performance and accuracy. \par
 The datasets used for evaluation include both real-world and synthetic graphs. Real-world graphs such as wiki-Talk provide an irregular graph structure and millions of edges, presenting a practical use case. On the other hand, synthetic graphs of any size and with different characteristics can be generated. In the experiments, Erdős–Rényi graphs of different sizes, ranging from $100.000$ to $20$ million nodes, have been generated. To establish comparable conditions between the different graph sizes, the density is kept consistent by controlling the number of outgoing edges per node. However, the in-degree of each node is random and ranges between $0$ and $n-1$, where $n$ is the total number of nodes. A simple python script is used to generate and store the graph structure in an edge list file.
 
+\vspace{1.5em}
 \begin{algorithm}[H]
 \caption{Synthetic Graph Generator}
 \KwIn{Range of node counts $[N_{\min}, N_{\max}]$, step size $\Delta N$, edges per node $E$}
@@ -132,6 +133,7 @@ Set random seed for reproducibility\;
   Print confirmation of generated graph with $n$ nodes and $n \cdot E$ edges\;
 }
 \end{algorithm} 
+\vspace{1.5em}
 
 The output can be directly used for Spark processing.\par
 During the experiments, the main parameters of the Monte Carlo method have been varied. The parameters include the number of walkers and the number of steps per walker. The goal was to systematically compare performance, memory and runtime across varying parameters. In the GraphX implementation the only parameters that were configured are the tolerance and the damping factor. The tolerance is usually set to $0.001$. In the experiments it was kept on such a low value to get very precise PageRank values and to compare the approximate Monte Carlo approach to the standard PageRank method. The reset probability was set to $0.15$ for both methods. Additionally, different Spark configurations were analyzed such as the number of executors and most importantly the memory allocated per executor. \par
@@ -153,3 +155,7 @@ Finally, the given approach combines an approximate Monte Carlo implementation w
 \subsubsection{Out-of-Memory Handling}
 \subsubsection{Crash Scenarios Encountered During Experiments}
 \subsubsection{Timeout: How and when to cancel an Experiment}
+
+When processing large-scale graphs memory exhaustion and application crashes are inevitable. Therefore, error handling strategies are required to ensure that experiments remain reproducible and manageable. For simplicity reasons, in this thesis, it is only differentiated between Out-of-Memory (OOM) failures and timeouts. \par
+The Java Out-of-Memory exception is a very common scenario and expected in this experimental setup since the goal is to strain memory. It is usually thrown when there is not enough memory in the Java heap to allocate for an object. This means the Garbage Collector is not able to free up sufficient space to accommodate an object.  
+
