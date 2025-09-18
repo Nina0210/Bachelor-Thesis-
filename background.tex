@@ -106,7 +106,7 @@ The memory allocation in Apache Spark is crucial for the performance of Spark ap
 \textbf{Reserved Memory.} Of the total memory allocated to an executor, 300 MB are reserved for storing Spark's internal objects. This amount is constant across all executors and guarantees sufficient memory for the system \cite{apache_spark_configuration_2025}.
 \textbf{Spark Unified Memory.} This section comprises the usable memory, which is divided into two subregions: \textbf{Spark Memory} and \textbf{User Memory}. The memory allocation depends on spark.memory.fraction. Typically, $0.6$ of the memory is allocated to Spark Memory and $0.4$ to User Memory. Forty percent of the user memory is used to store user data and the results of operations. Spark memory consists of execution and storage memory. Execution memory mainly stores temporary data for computations such as shuffles, joins, and aggregations, while storage memory holds cached data and broadcast variables. Furthermore, the memory allocation between the two can be configured through spark.memory.storage.fraction, where the default value is $0.5$. A special feature of Spark memory is its flexibility. Spark allows executor and storage memory to borrow from each other. This is called the dynamic occupancy mechanism. However, this feature has some limitations. Storage memory can borrow as much execution memory as needed when execution memory is idle. Execution memory, however, can only borrow up to a certain threshold called onHeapStorageSize. Storage memory only uses this part when it's not occupied by execution memory. Storage memory cannot evict execution memory and must wait until it is free. Conversely, execution memory has priority and can evict borrowed memory. In that case, cached data will be evicted until sufficient memory is released. This is because executing a task is more critical than cached data. A task can fail if execution results in an Out-of-Memory (OOM) error. Most operations, however, are executed in on-heap memory, which is subject to garbage collection (GC). Spark can move certain operations to off-heap memory to reduce GC overhead. In this case, memory is stored outside the JVM heap, enabling Spark to manage memory more efficiently. This improves performance for larger workloads, but adds a layer of complexity since Spark must handle memory allocation and deallocation. \cite{chambers_spark_2018}\cite{apache_spark_tuning_2025}. 
 
-% \subsection{Resilient Distributed Dataset}
+\subsection{Resilient Distributed Dataset}
 
 % \subsubsection{Definition and Properties of RDDs}
 % \subsubsection{Lineage and Fault Tolerance}
@@ -118,7 +118,7 @@ A Resilient Distributed Dataset (RDD) is the core abstraction in Spark. An RDD i
 
 
 
-\subsection{State of the Art}
+\subsection{Approximate PageRank Methods: State of the Art}
 % Iteration, sampling, matrix approximation, and Monte Carlo approaches.
 
 % \subsubsection{Iteration-Based Methods}

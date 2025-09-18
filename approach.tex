@@ -53,9 +53,18 @@ The algorithm initializes $w$ walkers per node, which is resulting in a total nu
 At each step, the walker $w$ generates a random number between $0$ and $1$. To ensure deterministic behavior, each walker uses a seeded random number generator that guarantees reproducibility:
 
 \vspace{0.5em}
-\begin{lstlisting}[language=Scala, caption={Random Seed}, label={lst:randseed}]
-val seed = System.nanoTime + Thread .currentThread().getId + step + currentNode.toInt
+
+\begin{lstlisting}[language=Scala, caption={Random Seed}, label={lst:randseed},float,floatplacement=H]
+    val seed = System.nanoTime + Thread .currentThread().getId + step + currentNode.toInt
 \end{lstlisting}
+
+% \begin{lstlisting}[
+% language=Scala, caption={Random Seed}, label={lst:randseed},float=H
+% ]
+% val seed = System.nanoTime + Thread .currentThread().getId + step + currentNode.toInt
+% \end{lstlisting}
+
+
 \vspace{0.5em}
 
 In case a node does not have any outedges, it's treated as a dangling node and the walker will directly teleport to a random node.
@@ -130,7 +139,7 @@ Set random seed for reproducibility\;
       }
     }
   }
-  Print confirmation of generated graph with $n$ nodes and $n \cdot E$ edges\;
+  
 }
 \end{algorithm} 
 \vspace{1.5em}
@@ -148,15 +157,14 @@ To ensure comparable conditions across all experiments, all experiments are exec
 In every experiment, metrics for both methods are collected, including configurations such as the number of walkers and steps for the Monte Carlo method. Another file collects the total runtime, allocated memory, and graph size to evaluate performance with limited memory and with different graph sizes. For accuracy evaluation, the top 20 ranks for both methods are saved in a separate file. \par
 All the collected data is saved in CSV files to efficiently analyze it in the next step. With the help of Python scripts and the use of libraries such as Matplotlib and Pandas, the data is structured and visualized in various plots of runtime, allocated memory, accuracy and cost. This provides a clear overview of the data and enables a thorough analysis of the data. \par
 This setup ensures the reproducibility and scalability of evaluating the Monte Carlo method. This is achieved through the use of various datasets, such as real-world and synthetic data, as well as a systematic variation in parameters. Additionally, scripts automate experiments and efficiently collect key metrics. This framework enables the analysis of the empirical results presented in the following sections. \par
-
-Finally, the given approach combines an approximate Monte Carlo implementation with a distributed Spark environment and a systematic experimental framework. The main goal of this setup is to determine whether the described method can operate with much less memory than the standard PageRank implementation. While a trade-off in accuracy and performance is expected and tolerated, the method aims to provide sufficient accuracy and performance. The evaluation will reveal whether the Monte Carlo approach is a viable alternative to the standard PageRank method in environments with restricted memory and large-scale graphs, addressing the central research question of this thesis.
-
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{images/Workflow_image.pdf}
     \caption{Experimental Workflow}
     \label{fig:workflow}
 \end{figure}
+Finally, the given approach combines an approximate Monte Carlo implementation with a distributed Spark environment and a systematic experimental framework. The main goal of this setup is to determine whether the described method can operate with much less memory than the standard PageRank implementation. While a trade-off in accuracy and performance is expected and tolerated, the method aims to provide sufficient accuracy and performance. The evaluation will reveal whether the Monte Carlo approach is a viable alternative to the standard PageRank method in environments with restricted memory and large-scale graphs, addressing the central research question of this thesis.
+
 
 \subsection{Error Handling}
 % \subsubsection{Out-of-Memory Handling}
