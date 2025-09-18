@@ -1,10 +1,10 @@
 \section{Approach}
 \subsection{Motivation for Monte Carlo in Spark}
 % Why Monte Carlo is a promising approach for memory-efficiency.
-\subsubsection{Limitations of Iterative PageRank}
-\subsubsection{Idea of Monte Carlo Random Walks}
-\subsubsection{Approximation vs. Convergence Trade-off}
-\subsubsection{Advantages in Spark Environments}
+% \subsubsection{Limitations of Iterative PageRank}
+% \subsubsection{Idea of Monte Carlo Random Walks}
+% \subsubsection{Approximation vs. Convergence Trade-off}
+% \subsubsection{Advantages in Spark Environments}
 
 The Monte Carlo method is an alternative approach to the traditional PageRank implementation. Instead of iteratively computing the entire rank vector, it focuses on simulating random walks on the graph. In this approach, a specified number of walkers are released per node, and they then traverse the graph according to the "random surfer" model. Similar to the original algorithm, a random surfer follows an outgoing link with probability $\alpha$ or teleports to a random node in the graph with probability $1-\alpha$. Ultimately, the PageRank values are estimated by the relative frequency with which a node was visited by random walkers. The key difference from the iterative approach is that the walkers take a predefined number of steps instead of updating the rank vector until convergence. Thus, the Monte Carlo approach can control memory usage by limiting the number of walkers and steps, making it a promising candidate for approximating the PageRank of large-scale graphs \cite{avrachenkov_monte_2007}. \par
 Additionally, estimating PageRank values is sufficient for many applications. For real-world tasks such as website ranking or user recommendation on social networks, the only things of interest are a node's relative importance and the stability of the ranking. Therefore, total convergence of the PageRank vector is unnecessary. The approximate Monte Carlo approach achieves significant memory and computational savings with only a slight loss in accuracy. This balance between performance and accuracy enables graph analytics on graphs that would otherwise be too large to handle.\par
@@ -15,11 +15,11 @@ This thesis explores the integration of such an approximate Monte Carlo method i
 \subsection{Algorithm Design}
 % Describe how RDDs are used for graph and walker states.
 
-\subsubsection{Initialization of Walkers}
-\subsubsection{Step-by-Step Simulation Process}
-\subsubsection{Random Number Generation and Reproducibility}
-\subsubsection{Handling Dangling Nodes}
-\subsubsection{Computation of Approximate PageRank Scores}
+% \subsubsection{Initialization of Walkers}
+% \subsubsection{Step-by-Step Simulation Process}
+% \subsubsection{Random Number Generation and Reproducibility}
+% \subsubsection{Handling Dangling Nodes}
+% \subsubsection{Computation of Approximate PageRank Scores}
 
 The approximate Monte Carlo algorithm estimates the stationary distribution by leveraging a step by step simulation that follows the random surfer model.
 The pseudo code bellow presents the walker simulation and the decision logic used in each step.
@@ -61,13 +61,13 @@ val seed = System.nanoTime + Thread .currentThread().getId + step + currentNode.
 In case a node does not have any outedges, it's treated as a dangling node and the walker will directly teleport to a random node.
 After $k$ steps the simulation terminates and the PageRank values are approximated based on the walker visits of a node.
 
-\subsection{Implementation in Spark}
-\subsubsection{Graph Representation with RDDs}
-\subsubsection{Adjacency List Construction}
-\subsubsection{Broadcasting for Teleportation}
-\subsubsection{Walker State Representation and Distribution}
-\subsubsection{RDD Caching, Materialization, and Unpersisting}
-\subsubsection{Repartitioning for Load Balancing}
+% \subsection{Implementation in Spark}
+% \subsubsection{Graph Representation with RDDs}
+% \subsubsection{Adjacency List Construction}
+% \subsubsection{Broadcasting for Teleportation}
+% \subsubsection{Walker State Representation and Distribution}
+% \subsubsection{RDD Caching, Materialization, and Unpersisting}
+% \subsubsection{Repartitioning for Load Balancing}
 
 The Monte Carlo Implementation is structured around two main components: The graph representation and the walker states. Both of them are stored in Sparks RDDs, which make them suitable for processing in a distributed system.
 
@@ -103,12 +103,12 @@ When processing large graphs that include nodes with high ingoing edges it preve
 
 \subsection{Experimental Framework and Automation}
 
-\subsubsection{Datasets: Real-World and Synthetic Graphs}
-\subsubsection{Synthetic Graph Generation}
-\subsubsection{Parameter Variation in Experiments}
-\subsubsection{Spark Cluster Setup}
-\subsubsection{Automation via Shell Scripts}
-\subsubsection{Data Collection and Visualization}
+% \subsubsection{Datasets: Real-World and Synthetic Graphs}
+% \subsubsection{Synthetic Graph Generation}
+% \subsubsection{Parameter Variation in Experiments}
+% \subsubsection{Spark Cluster Setup}
+% \subsubsection{Automation via Shell Scripts}
+% \subsubsection{Data Collection and Visualization}
 
 Finally, to evaluate the performance of the approximate Monte Carlo method an experimental framework was established, that aims for reproducibility. It benchmarks the Monte Carlo method and compares it to the standard PageRank method. The evaluation is focusing mainly on memory efficiency while trading off performance and accuracy. \par
 The datasets used for evaluation include both real-world and synthetic graphs. Real-world graphs such as wiki-Talk provide an irregular graph structure and millions of edges, presenting a practical use case. On the other hand, synthetic graphs of any size and with different characteristics can be generated. In the experiments, Erdős–Rényi graphs of different sizes, ranging from $100.000$ to $20$ million nodes, have been generated. To establish comparable conditions between the different graph sizes, the density is kept consistent by controlling the number of outgoing edges per node. However, the in-degree of each node is random and ranges between $0$ and $n-1$, where $n$ is the total number of nodes. A simple python script is used to generate and store the graph structure in an edge list file.
@@ -151,11 +151,20 @@ This setup ensures the reproducibility and scalability of evaluating the Monte C
 
 Finally, the given approach combines an approximate Monte Carlo implementation with a distributed Spark environment and a systematic experimental framework. The main goal of this setup is to determine whether the described method can operate with much less memory than the standard PageRank implementation. While a trade-off in accuracy and performance is expected and tolerated, the method aims to provide sufficient accuracy and performance. The evaluation will reveal whether the Monte Carlo approach is a viable alternative to the standard PageRank method in environments with restricted memory and large-scale graphs, addressing the central research question of this thesis.
 
-\subsection{Error Handling}
-\subsubsection{Out-of-Memory Handling}
-\subsubsection{Crash Scenarios Encountered During Experiments}
-\subsubsection{Timeout: How and when to cancel an Experiment}
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth]{images/Workflow_image.pdf}
+    \caption{Experimental Workflow}
+    \label{fig:workflow}
+\end{figure}
 
-When processing large-scale graphs memory exhaustion and application crashes are inevitable. Therefore, error handling strategies are required to ensure that experiments remain reproducible and manageable. For simplicity reasons, in this thesis, it is only differentiated between Out-of-Memory (OOM) failures and timeouts. \par
-The Java Out-of-Memory exception is a very common scenario and expected in this experimental setup since the goal is to strain memory. It is usually thrown when there is not enough memory in the Java heap to allocate for an object. This means the Garbage Collector is not able to free up sufficient space to accommodate an object.  
+\subsection{Error Handling}
+% \subsubsection{Out-of-Memory Handling}
+% \subsubsection{Crash Scenarios Encountered During Experiments}
+% \subsubsection{Timeout: How and when to cancel an Experiment}
+
+When processing large-scale graphs, memory exhaustion and application crashes are inevitable. Therefore, error-handling strategies are necessary to ensure that experiments remain reproducible and manageable. For simplicity, this thesis only differentiates between out-of-memory (OOM) failures and timeouts. \par
+The Java Out-of-Memory exception is a common scenario that is expected in this experimental setup because the goal is to deliberately strain memory. This exception is usually thrown when there is not enough memory in the Java heap to allocate to an object. This means the garbage collector is unable to free up enough space for the object. In these experiments, the exception was detected in the log files. In that case, the configurations are automatically marked as failed and excluded from further experiments. \par
+Since very large graphs are being processed, some experiments can take a disproportionately long time to finish. This is why a timeout mechanism is implemented to prevent experiments from blocking the pipeline. If an experiment does not finish within the predefined time, the current experiment is terminated, and the next experiment with different configurations begins. This ensures that all experiments finish within an acceptable time frame.  \par
+These error handling strategies establish a more systematic and stable process. Experiments can run without manual intervention, and the resulting datasets are more consistent.
 
