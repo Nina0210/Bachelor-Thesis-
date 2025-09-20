@@ -1,4 +1,5 @@
 \section{Approach}
+\subsection{Overview}
 \subsection{Motivation for Monte Carlo in Spark}
 % Why Monte Carlo is a promising approach for memory-efficiency.
 % \subsubsection{Limitations of Iterative PageRank}
@@ -53,16 +54,12 @@ The algorithm initializes $w$ walkers per node, which is resulting in a total nu
 At each step, the walker $w$ generates a random number between $0$ and $1$. To ensure deterministic behavior, each walker uses a seeded random number generator that guarantees reproducibility:
 
 \vspace{0.5em}
-
-\begin{lstlisting}[language=Scala, caption={Random Seed}, label={lst:randseed},float,floatplacement=H]
-    val seed = System.nanoTime + Thread .currentThread().getId + step + currentNode.toInt
+\newpage
+\begin{lstlisting}[caption={Materializing and Unpersisting Walker RDD},
+                   label={lst:walker},
+                   captionpos=b] 
+val seed = System.nanoTime + Thread.currentThread().getId + step + currentNode.toInt
 \end{lstlisting}
-
-% \begin{lstlisting}[
-% language=Scala, caption={Random Seed}, label={lst:randseed},float=H
-% ]
-% val seed = System.nanoTime + Thread .currentThread().getId + step + currentNode.toInt
-% \end{lstlisting}
 
 
 \vspace{0.5em}
@@ -70,7 +67,7 @@ At each step, the walker $w$ generates a random number between $0$ and $1$. To e
 In case a node does not have any outedges, it's treated as a dangling node and the walker will directly teleport to a random node.
 After $k$ steps the simulation terminates and the PageRank values are approximated based on the walker visits of a node.
 
-% \subsection{Implementation in Spark}
+\subsection{Implementation in Spark}
 % \subsubsection{Graph Representation with RDDs}
 % \subsubsection{Adjacency List Construction}
 % \subsubsection{Broadcasting for Teleportation}
@@ -98,7 +95,7 @@ val broadcastNodes = sc.broadcast(allNodesArray)
 
 This mitigates costly network shuffles during every teleportation. Because the set of nodes is required in every simulation step it is cached in memory for efficient access.
 A fixed number of walkers are initialized and represented in a seperate RDD. The RDD is distributed across multiple partitions to ensure efficient parallel processing and scaling when analyzing large graphs. Each entry in the RDD is a random vertex ID, representing the current vertex of a walker. In each simulation step the walker RDD is joined with the adjacency list to get all possible outgoing edges. After each walker updates its position, a new walker RDD is initialized with the updated positions. Before the previous walker RDD is explicitly unpersisted after the step is completed, the new walker RDD has to be materialized.
-
+\newpage
 \begin{lstlisting}[language=Scala, caption={Materializing and Unpersisting Walker RDD}, label={lst:materialize}]
 nextWalkersRDD.cache() 
 nextWalkersRDD.count() // trigger an action to materialze RDD
