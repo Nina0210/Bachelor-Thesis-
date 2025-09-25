@@ -7,9 +7,11 @@
 \SetKw{KwTo}{to}
 \SetKw{KwStep}{step}
 \SetKwFor{ForEach}{for each}{do}{}  % only if you use \ForEach
+\usepackage{subcaption}
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{float}
+\usepackage{booktabs,tabularx}
 %\usepackage{float} % for the [H] specifier
 \lstset{
   basicstyle=\ttfamily\footnotesize,
@@ -29,7 +31,7 @@
 \usepackage{setspace}
 \onehalfspacing
 %\geometry{a4paper, margin=1in}
-\geometry{a4paper, left = 3cm, right = 3cm, top = 2cm, bottom = 4cm}
+\geometry{a4paper, left = 3cm, right = 3cm, top = 3cm, bottom = 4cm}
 % --- Section Titles with INCREASED SPACING ---
 \usepackage{titlesec}
 % Make sections much bigger and add MORE space from top of page
@@ -43,7 +45,7 @@
 % Make subsections bigger with MORE space before
 \titleformat{\subsection}
   {\normalfont\Large\bfseries}  
-  {\thesubsection}{1em}{}
+  {\thesubsection}{2em}{}
 \titlespacing*{\subsection}
   {0pt}     % left margin  
   {5ex plus 1.5ex minus .2ex}  % INCREASED space before (was 3.5ex, now 5ex)
