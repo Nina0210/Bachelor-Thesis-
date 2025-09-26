@@ -281,92 +281,98 @@ The analysis predicted that the Monte Carlo approach would require fewer GiB-hou
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[t]{0.47\linewidth}
+    \begin{subfigure}[t]{0.75\linewidth}
         \centering
-        \includegraphics[width=\linewidth]{images/plots/ER_2edg/runtime_vs_nodes_er_graph_2_edges.pdf}
+        \includegraphics[width=\linewidth]{images/plots/ER_2edg/combined_runtime_memory_vs_nodes_2edges_v3.pdf}
         \caption{2 edges per node}
         \label{fig:2run}
     \end{subfigure}\hfill
-    \begin{subfigure}[t]{0.47\linewidth}
+    \begin{subfigure}[t]{0.75\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/plots/ER_2edg/combined_runtime_memory_vs_nodes_2edges_mc.pdf}
+        \caption{2 edges per node}
+        \label{fig:2cost}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.75\linewidth}
         \centering
         \includegraphics[width=\linewidth]{images/plots/ER_2edg/gbhrs_nodes_er_graph_2edges.pdf}
         \caption{2 edges per node}
         \label{fig:2cost}
     \end{subfigure}
-    \begin{subfigure}[t]{0.47\linewidth}
-        \centering
-        \includegraphics[width=\linewidth]{images/plots/ER_2edg/nodes_vs_mvm_2edges.pdf}
-        \caption{2 edges per node}
-        \label{fig:2mvm}
-    \end{subfigure}\hfill
+    % \begin{subfigure}[t]{0.47\linewidth}
+    %     \centering
+    %     \includegraphics[width=\linewidth]{images/plots/ER_2edg/nodes_vs_mvm_2edges.pdf}
+    %     \caption{2 edges per node}
+    %     \label{fig:2mvm}
+    % \end{subfigure}\hfill
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[t]{0.47\linewidth}
+    \begin{subfigure}[t]{0.75\linewidth}
         \centering
-        \includegraphics[width=\linewidth]{images/plots/ER_3edg/runtime_vs_nodes_er_graph_3_edges.pdf}
+        \includegraphics[width=\linewidth]{images/plots/ER_3edg/combined_runtime_memory_vs_nodes_3edges_gx.pdf}
         \caption{3 edges per node}
         \label{fig:3run}
     \end{subfigure}
-    \begin{subfigure}[t]{0.47\linewidth}
+    \begin{subfigure}[t]{0.75\linewidth}
         \centering
-        \includegraphics[width=\linewidth]{images/plots/ER_3edg/gbhrs_nodes_er_graph_3edges.pdf}
+        \includegraphics[width=\linewidth]{images/plots/ER_3edg/combined_runtime_memory_vs_nodes_3edges_mc.pdf}
         \caption{3 edges per node}
         \label{fig:3cost}
     \end{subfigure}
-    \begin{subfigure}[t]{0.47\linewidth}
+    \begin{subfigure}[t]{0.75\linewidth}
         \centering
-        \includegraphics[width=\linewidth]{images/plots/ER_3edg/nodes_vs_mvm_3edges.pdf}
+        \includegraphics[width=\linewidth]{images/plots/ER_3edg/gbhrs_nodes_er_graph_3edges.pdf}
         \caption{3 edges per node}
         \label{fig:3mvm}
     \end{subfigure}
 \end{figure}
 
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[t]{0.47\linewidth}
-        \centering
-        \includegraphics[width=\linewidth]{images/plots/ER_4edg/runtime_vs_nodes_er_graph_4_edges.pdf}
-        \caption{4 edges per node}
-        \label{fig:4run}
-    \end{subfigure}
-    \begin{subfigure}[t]{0.47\linewidth}
-        \centering
-    \includegraphics[width=\linewidth]{images/plots/ER_4edg/gbhrs_nodes_er_graph_4edges.pdf}
-        \caption{4 edges per node}
-        \label{fig:4cost}
-    \end{subfigure}
-    \begin{subfigure}[t]{0.47\linewidth}
-        \centering
-        \includegraphics[width=\linewidth]{images/plots/ER_4edg/nodes_vs_mvm_4edges.pdf}
-        \caption{4 edges per node}
-        \label{fig:4run}
-    \end{subfigure}
-    \caption{3 walkers per node and 10 steps per walker}
-\end{figure}
+% \begin{figure}[H]
+%     \centering
+%     \begin{subfigure}[t]{0.47\linewidth}
+%         \centering
+%         \includegraphics[width=\linewidth]{images/plots/ER_4edg/runtime_vs_nodes_er_graph_4_edges.pdf}
+%         \caption{4 edges per node}
+%         \label{fig:4run}
+%     \end{subfigure}
+%     \begin{subfigure}[t]{0.47\linewidth}
+%         \centering
+%     \includegraphics[width=\linewidth]{images/plots/ER_4edg/gbhrs_nodes_er_graph_4edges.pdf}
+%         \caption{4 edges per node}
+%         \label{fig:4cost}
+%     \end{subfigure}
+%     \begin{subfigure}[t]{0.47\linewidth}
+%         \centering
+%         \includegraphics[width=\linewidth]{images/plots/ER_4edg/nodes_vs_mvm_4edges.pdf}
+%         \caption{4 edges per node}
+%         \label{fig:4run}
+%     \end{subfigure}
+%     \caption{3 walkers per node and 10 steps per walker}
+% \end{figure}
 
-\begin{figure}[H]
-    \centering
-    \begin{subfigure}[t]{0.47\linewidth}
-        \centering
-        \includegraphics[width=\linewidth]{images/plots/ER_5edg/runtime_vs_nodes_er_graph_5_edges.pdf}
-        \caption{5 edges per node}
-        \label{fig:5run}
-    \end{subfigure}
-    \begin{subfigure}[t]{0.47\linewidth}
-        \centering
-        \includegraphics[width=\linewidth]{images/plots/ER_5edg/gbhrs_nodes_er_graph_5edges.pdf}
-        \caption{5 edges per node}
-        \label{fig:5cost}
-    \end{subfigure}
-    \begin{subfigure}[t]{0.47\linewidth}
-        \centering
-        \includegraphics[width=\linewidth]{images/plots/ER_5edg/nodes_vs_mvm_5edges.pdf}
-        \caption{5 edges per node}
-        \label{fig:5mvm}
-    \end{subfigure}
-\end{figure}
+% \begin{figure}[H]
+%     \centering
+%     \begin{subfigure}[t]{0.47\linewidth}
+%         \centering
+%         \includegraphics[width=\linewidth]{images/plots/ER_5edg/runtime_vs_nodes_er_graph_5_edges.pdf}
+%         \caption{5 edges per node}
+%         \label{fig:5run}
+%     \end{subfigure}
+%     \begin{subfigure}[t]{0.47\linewidth}
+%         \centering
+%         \includegraphics[width=\linewidth]{images/plots/ER_5edg/gbhrs_nodes_er_graph_5edges.pdf}
+%         \caption{5 edges per node}
+%         \label{fig:5cost}
+%     \end{subfigure}
+%     \begin{subfigure}[t]{0.47\linewidth}
+%         \centering
+%         \includegraphics[width=\linewidth]{images/plots/ER_5edg/nodes_vs_mvm_5edges.pdf}
+%         \caption{5 edges per node}
+%         \label{fig:5mvm}
+%     \end{subfigure}
+% \end{figure}
 
 %%%%%%% ER Graphs %%%%%%%
 Next the plots of the synthetic graphs are analyzed. 
