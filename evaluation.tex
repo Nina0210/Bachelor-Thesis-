@@ -250,10 +250,6 @@ The analysis predicted that the Monte Carlo approach would require fewer GiB-hou
 
 The results of the experiments on real-world graphs show significant insights about the characteristics of the Monte Carlo method and the GraphX standard implementation. In the following plots the four different datasets are represented.\par
 
-\textbf{Wiki-Talk.} This dataset represents a communication network with 2.4 million nodes and 5 million edges. It is the therefore the largest graph used across the experiments. The first plot shows the executor memory versus runtime analysis. Although, both methods perform very similar, the GraphX method encounters out-of-memory and timeout errors under 2000 MiB, while the Monte Carlo method successfully finishes at all memory configurations. The total runtime of all successful runs stays under 200 seconds, where the Monte Carlo almost remains constant at 100 seconds and the GraphX method starts around 170 seconds and then aligns with the Monte Carlo method.\par
-
-The cost analysis shows a similar pattern between the two methods. While the Monte Carlo method costs are growing to nearly 0.2 GiB-hours with increasing memory, the GraphX method is more costly and takes around 2.4 GiB-hours at 8000 MiB. 
-
 \begin{figure}[H]
     \centering
     \begin{subfigure}[t]{0.5\linewidth}
@@ -278,6 +274,39 @@ The cost analysis shows a similar pattern between the two methods. While the Mon
     \label{fig:wiki-comparison}
 \end{figure}
 
+\textbf{Wiki-Talk.} This dataset represents a communication network with 2.4 million nodes and 5 million edges. It is the therefore the largest graph used across the experiments. The first plot shows the executor memory versus runtime analysis. Although, both methods perform very similar, the GraphX method encounters out-of-memory and timeout errors under 2000 MiB, while the Monte Carlo method successfully finishes at all memory configurations. The total runtime of all successful runs stays under 200 seconds, where the Monte Carlo almost remains constant at 100 seconds and the GraphX method starts around 170 seconds and then aligns with the Monte Carlo method.\par
+
+The cost analysis shows a similar pattern between the two methods. While the Monte Carlo method costs are growing to nearly 0.2 GiB-hours with increasing allocated memory, the GraphX method is more costly and takes around 2.4 GiB-hours at 8000 MiB. \par
+The next graph shows an accuracy analysis of the Monte Carlo method against the GraphX ground truth. In this graph all walker configurations reach an accuracy above $80\%$. Although the accuracy is increasing at first with more than one walker per node, it is stabilizing at $85\%$ with five walkers per node. This shows that the communication network structure allows an effective convergence with only minimal walkers. An overlap over $80\%$ of the top ranks is sufficient for most real-world applications. \par
+
+
+
+% \begin{figure}[H]
+%     \centering
+%     \begin{subfigure}[t]{0.5\linewidth}
+%         \centering
+%         \includegraphics[width=\linewidth]{images/plots/wiki-Talk/memory_vs_runtime_wiki_talk.pdf}
+%         \caption{Memory vs. Runtime}
+%         \label{fig:wikirun}
+%     \end{subfigure}\hfill
+%     \begin{subfigure}[t]{0.5\linewidth}
+%         \centering
+%         \includegraphics[width=\linewidth]{images/plots/wiki-Talk/gbhrs_nodes_wiki_talk.pdf}
+%         \caption{GiB-hours}
+%         \label{fig:wikigibhrs}
+%     \end{subfigure}
+%     \begin{subfigure}[t]{0.5\linewidth}
+%         \centering
+%         \includegraphics[width=\linewidth]{images/plots/wiki-Talk/accuracy_plots_wiki_talk.pdf}
+%         \caption{Accuracy}
+%         \label{fig:wikigibhrs}
+%     \end{subfigure}
+%     \caption{PageRank on wiki-Talk Graph}
+%     \label{fig:wiki-comparison}
+% \end{figure}
+
+
+
 \begin{figure}[H]
     \centering
     \begin{subfigure}[t]{0.5\linewidth}
@@ -301,6 +330,9 @@ The cost analysis shows a similar pattern between the two methods. While the Mon
     \caption{PageRank on web-Google Graph}
     \label{fig:wiki-comparison}
 \end{figure}
+
+\textbf{Web-Google.} The web-Google graph is a web graph with 875K nodes and 5.1 million edges. A very noticeable difference to the wiki-Talk plots can be observed in the performance plot, where the strengths of the Monte Carlo method can be seen. While the Monte Carlo method keeps runtimes consistent under 100 seconds across all memory configurations, \par
+
 
 % \begin{figure}[H]
 %     \centering
