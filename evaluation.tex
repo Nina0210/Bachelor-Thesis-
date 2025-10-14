@@ -198,7 +198,9 @@ spark-submit \
 \end{lstlisting}
 \vspace{0.5em}
 In Spark, the executor memory is allocated through spark-submit, which is shown above. The parameter executor-memory specifies the available JVM heap size per executor. For all experiments the allocated memory per executor was varied and set between 450 MiB and 8 GiB. Other parameters such as the number of executors and total numbers of cores were kept the same to ensure comparability throughout all experiments.\par
-The memory configurations were logged for both the Monte Carlo method and the standard method. In case the allocated memory was not sufficient for the application and an OOM exception was thrown, the error was handled as mention above. The failed runs show the boundaries of each method under limited memory. The focus of the analysis is put on the minimum memory required and how this changes with increasing the graph size. The results are comapred between the two methods.
+The memory configurations were logged for both the Monte Carlo method and the standard method. In case the allocated memory was not sufficient for the application and an OOM exception was thrown, the error was handled as mention above. The failed runs show the boundaries of each method under limited memory. The focus of the analysis is put on the minimum memory required and how this changes with increasing the graph size. The results are compared between the two methods. \par
+
+
 
 
 
@@ -212,7 +214,7 @@ The analyses focuses mainly on the effect of different graph sizes on the runtim
 \subsection{Accuracy}
 The accuracy was evaluated by comparing the ranks of the Monte Carlo method and the standard PageRank method. The standard PageRank method is considered to be the ground truth as it was configured with a tolerance of $0.001$. During the experiments the goal was to determine how close ranks are to the ground truth. Accuracy is mainly controlled by the number of walkers, the steps per walker and the graph structure. \par
 
-Since in many real-world applications only the top ranks are needed, the goal was to only analyze the top $20$ ranks. The ranks were also collected through the shell scripts. The accuracy was then determined by the Jaccard index, which is a statistic used to measure the similarity and distance of sample sets. Jaccard index in combination with the top $20$ ranks is very simple and focuses on overlap of important nodes instead of overemphasizing tail nodes.
+Since in many real-world applications only require the top ranks are needed, the goal was to only analyze the top $20$ ranks. The ranks were also collected through the shell scripts. The accuracy was then determined by the Jaccard index, which is a statistic used to measure the similarity and distance of sample sets. Jaccard index in combination with the top $20$ ranks is very simple and focuses on overlap of important nodes instead of overemphasizing tail nodes.
 
 \vspace{1.0em}
 \begin{algorithm}[H]
@@ -248,6 +250,66 @@ The analysis predicted that the Monte Carlo approach would require fewer GiB-hou
 
 \subsection{Results and Plots}
 
+\subsubsection{Performance}
+
+The performance experiments show how the Monte Carlo and the GraphX implementation perform under different memory constraints and graph sizes. The first two plots show the executor versus runtime behavior of both methods on real-world graphs. \par
+The first plot is based on the \textbf{Wiki-Talk} Graph. This dataset represents a communication network with 2.4 million nodes and 5 million edges. It is the therefore the largest graph used across the experiments. Although, both methods perform very similar, the GraphX method encounters out-of-memory and timeout errors under 2000 MiB, while the Monte Carlo method successfully finishes at all memory configurations. The total runtime of all successful runs stays under 200 seconds, where the Monte Carlo almost remains constant at 100 seconds and the GraphX method starts around 170 seconds and then aligns with the Monte Carlo method. This proves the superior ability of the Monte Carlo approach to operate under very restricted memory conditions.\par
+The second plot shows the performance on the \textbf{Web-Google} graph, which is a web graph with 875K nodes and 5.1 million edges. A very noticeable difference to the wiki-Talk plots can be observed in the performance plot, where the strengths of the Monte Carlo method can be seen. The Monte Carlo method keeps runtimes consistent under 100 seconds across all memory configurations, which suggests that the the memory consumption stays well within the available resources.However, the GraphX method requires a lot more time to finish under memory pressure with a total runtime of 1300 seconds at 700 MiB per Executor. As allocated memory increases the performance of the GraphX method improves drastically and stabilizes at comparable runtimes as the Monte Carlo method. The extreme authority, typical for web-graphs, appears to cause the bad performance of the GraphX method under memory pressure. This is likely caused by excessive garbage collection triggered by the GraphX matrix multiplication that is operating with limited memory. Whereas the Monte Carlo approach with it's fixed number of walkers avoids that problem entirely since the memory footprint is proportional only to the number of walkers. \par
+
+
+
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.5\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/plots/wiki-Talk/memory_vs_runtime_wiki_talk.pdf}
+        \caption{Wiki-Talk Graph}
+        \label{fig:wikirun}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{0.5\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/plots/web-Google/memory_vs_runtime_web_google.pdf}
+        \caption{Web-Google Graph}
+        \label{fig:wikigibhrs}
+    \end{subfigure}
+    \caption{Memory vs. Runtime}
+    \label{fig:wiki-comparison}
+\end{figure}
+
+The following plots show the performance of both methods on synthetic Erdős-Renyi graphs. The analysis gives an insight on how the methods perform with increasing graph size while keeping the same graph structure.\par
+The analysis of the ER graph with two edges per node includes the runtime and the minimal memory configuration used for that graph size. For the Monte Carlo method, the runtime starts below 100 seconds at 100 thousand nodes and then increases to just under 1500 seconds at 20 million nodes. During the experiments the required memory remains stable at 450 MiB. The GraphX method's runtime starts similar to the Monte Carlo method but then has higher runtimes for graphs between 200 thousand and 800 thousand nodes. However, for graphs between 900 thousand and 20 million nodes the runtimes of the GraphX method are lower compared to the Monte Carlo method. Although the performance of the GraphX method is better on bigger graphs the required memory is much higher than in the Monte Carlo method. GraphX starts with 450 MiB on the smallest graph but quickly increases to 3000 MiB and then finally to 8000 MiB at 20 million nodes.\par
+When increasing the edge count per node to three, the memory differences between the methods become clearer. While both methods perform similar compared to the previous experiment, the GrapX method has a timeout at 20 million nodes. The required memory for the Monte Carlo method remains at 450 MiB across all graphs. In contrast, the GraphX method's memory increases starting from 450 MiB to 6000 MiB at 1 million nodes and 8000 MiB at 15 million nodes.\par
+The performance analysis reveals different key findings. First, the Monte Carlo method demonstrates much better performance stability under constraint memory, while GraphX either fails or suffers from poor performance. Second, the graph structure has a significant influence on the performance. Web graphs with extreme authority show most advantages for the Monte Carlo method, while more balanced communication graphs like wiki-talk only show little advantage of the Monte Carlo method. Lastly, the Monte Carlo method encounters much better scalability on large graphs, maintaining a low memory consumption, while GraphX requires a much higher amount of memory. The performance experiments show that the Monte Carlo method is superior to standard methods as it is able to operate in a memory constrained environment without trading off performance.
+
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.5\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/plots/ER_2edg/combined_runtime_memory_vs_nodes_2edges_gx_mc.pdf}
+        \caption{Erdős–Rényi Graph with two outgoing edges per node}
+        \label{fig:wikigibhrs}
+    \end{subfigure}
+    \begin{subfigure}[t]{0.5\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/plots/ER_3edg/combined_runtime_memory_vs_nodes_3edges_gx_mc.pdf}
+        \caption{Erdős–Rényi Graph with three outgoing edges per node}
+        \label{fig:wikigibhrs}
+    \end{subfigure}
+    \caption{Number of Nodes vs. Runtime and Memory}
+    \label{fig:wiki-comparison}
+\end{figure}
+
+
+
+%synthetic plots runtime
+\subsubsection{Costs}
+%real world plots cost
+%synthetic plots costs
+\subsubsection{Accuracy}
+%real world plots accuracy
+
 The results of the experiments on real-world graphs show significant insights about the characteristics of the Monte Carlo method and the GraphX standard implementation. In the following plots the four different datasets are represented.\par
 
 \begin{figure}[H]
@@ -274,7 +336,7 @@ The results of the experiments on real-world graphs show significant insights ab
     \label{fig:wiki-comparison}
 \end{figure}
 
-\textbf{Wiki-Talk.} This dataset represents a communication network with 2.4 million nodes and 5 million edges. It is the therefore the largest graph used across the experiments. The first plot shows the executor memory versus runtime analysis. Although, both methods perform very similar, the GraphX method encounters out-of-memory and timeout errors under 2000 MiB, while the Monte Carlo method successfully finishes at all memory configurations. The total runtime of all successful runs stays under 200 seconds, where the Monte Carlo almost remains constant at 100 seconds and the GraphX method starts around 170 seconds and then aligns with the Monte Carlo method.\par
+% \textbf{Wiki-Talk.} This dataset represents a communication network with 2.4 million nodes and 5 million edges. It is the therefore the largest graph used across the experiments. The first plot shows the executor memory versus runtime analysis. Although, both methods perform very similar, the GraphX method encounters out-of-memory and timeout errors under 2000 MiB, while the Monte Carlo method successfully finishes at all memory configurations. The total runtime of all successful runs stays under 200 seconds, where the Monte Carlo almost remains constant at 100 seconds and the GraphX method starts around 170 seconds and then aligns with the Monte Carlo method.\par
 
 The cost analysis shows a similar pattern between the two methods. While the Monte Carlo method costs are growing to nearly 0.2 GiB-hours with increasing allocated memory, the GraphX method is more costly and takes around 2.4 GiB-hours at 8000 MiB. \par
 The next graph shows an accuracy analysis of the Monte Carlo method against the GraphX ground truth. In this graph all walker configurations reach an accuracy above $80\%$. Although the accuracy is increasing at first with more than one walker per node, it is stabilizing at $85\%$ with five walkers per node. This shows that the communication network structure allows an effective convergence with only minimal walkers. An overlap over $80\%$ of the top ranks is sufficient for most real-world applications. \par
