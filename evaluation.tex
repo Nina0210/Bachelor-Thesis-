@@ -264,16 +264,16 @@ The second plot shows the performance on the \textbf{Web-Google} graph, which is
     \begin{subfigure}[t]{0.5\linewidth}
         \centering
         \includegraphics[width=\linewidth]{images/plots/wiki-Talk/memory_vs_runtime_wiki_talk.pdf}
-        \caption{Wiki-Talk Graph}
+        \caption{Wiki-Talk Graph with 2.4 million nodes and 5 million edges}
         \label{fig:wikirun}
     \end{subfigure}\hfill
     \begin{subfigure}[t]{0.5\linewidth}
         \centering
         \includegraphics[width=\linewidth]{images/plots/web-Google/memory_vs_runtime_web_google.pdf}
-        \caption{Web-Google Graph}
+        \caption{Web-Google Graph with 800 thousand      nodes and 5 million edges}
         \label{fig:wikigibhrs}
     \end{subfigure}
-    \caption{Memory vs. Runtime}
+    \caption{Memory vs. Runtime,\\Configs: 3 walkers per node, 10 steps per walker}
     \label{fig:wiki-comparison}
 \end{figure}
 
@@ -297,7 +297,7 @@ The performance analysis reveals different key findings. First, the Monte Carlo 
         \caption{Erdős–Rényi Graph with three outgoing edges per node}
         \label{fig:wikigibhrs}
     \end{subfigure}
-    \caption{Performance Graphs}
+    \caption{Performance Graphs,\\Configs: 3 walkers per node, 10 steps per node}
     \label{fig:wiki-comparison}
 \end{figure}
 
@@ -328,6 +328,7 @@ The performance analysis reveals different key findings. First, the Monte Carlo 
         \caption{web-Google Graph}
         \label{fig:wikigibhrs}
     \end{subfigure}
+    \caption{Cost Graphs, \\ Configs: 3 walkers per node, 10 steps per walker}
 \end{figure}
 
 
@@ -353,7 +354,7 @@ These findings have significant impact on real world deployment scenarios where 
         \caption{Erdős–Rényi Graph with three outgoing edges per node}
         \label{fig:wikigibhrs}
     \end{subfigure}
-    \caption{Cost Graphs}
+    \caption{Cost Graphs, \\ Configs: 3 walkers per node, 10 steps per walker}
     \label{fig:wiki-comparison}
 \end{figure}
 
@@ -407,7 +408,3 @@ Despite the limitations Monte Carlo PageRank serves as a serious cost efficient 
 
 
 
-\subsubsection{Trade-offs}
-\subsubsection{Experimental setup: realistic?}
-\subsubsection{Monte Carlo Approach: good Alternative?}
-% Interpret results and explain when your approach is advantageous.

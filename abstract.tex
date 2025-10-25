@@ -1,1 +1,15 @@
 \section*{Abstract}
+
+Standard iterative PageRank implementations encounter significant memory challenges for large-scale graph analysis as they require to store the entire graph structure, which takes up $O(n^2)$ space. Therefore iterative methods are not able to successfully operate on graphs with millions of nodes in memory constraint environments.\par
+
+This thesis addresses this problem by proposing Monte Carlo PageRank, an approximate PageRank algorithm that estimates ranks via random walk simulation. At the beginning a fixed number of walkers per node is initialized that traverse the graph according to the random surfer model. The ranks are then estimated by the visiting frequency of each node. This approachs memory consumption is only controlled by the number of walkers rather than the graph size. The method is implemented in Apache Spark based on RDDs for distributed processing.\par
+
+Experiments on real world and synthetic Erdős–Rényi graphs with up to 20 million nodes demonstrate that Monte Carlo PageRank is able to successfully operate with only 450 MiB across all graph sizes while GraphX standard PageRank method requires 2-8 GiB on the same datasets. Under memory constraint conditions Monte Carlo PageRank maintains stable runtimes while GraphX either fails or encounters performance issues. The approximate method achieves 75\% to 90\% accuracy on the top 20 nodes depending on the walker count on 5-10 times lower resource costs measured in GiB-hours compared to standard iterative PageRank. \par
+
+Monte Carlo PageRank demonstrates a memory efficient alternative for large scale graph analytics under memory constraint conditions where standard methods fail to operate while achieving an acceptable accuracy.
+
+
+
+
+
+
