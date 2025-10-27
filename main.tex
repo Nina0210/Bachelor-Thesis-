@@ -12,6 +12,8 @@
 \usepackage{xcolor}
 \usepackage{float}
 \usepackage{booktabs,tabularx}
+\usepackage{multibib}
+\newcites{tools}{Tools and Software} % creates a second bib with its own cite commands
 %\usepackage{float} % for the [H] specifier
 \lstset{
   basicstyle=\ttfamily\footnotesize,
@@ -147,4 +149,11 @@ Date of submission: & \today
 \input{ai_acknowledgement}
 \newpage
 \bibliography{references}
+\newpage
+\bibliography{tools}
+
+% author und jahr, author in anfang groß ohne bindestrich zwishcen author und year
+
+% Stil des Literaturverzeichnisses
+
 \end{document}
