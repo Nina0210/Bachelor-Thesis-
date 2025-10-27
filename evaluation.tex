@@ -1,12 +1,16 @@
 \section{Evaluation}
 
 \subsection{Overview}
+In this section the implemented Monte Carlo PageRank method is evaluated and compared to the standard GraphX PageRank implementation. The evaluation answers the central research question: Can Monte Carlo PageRank successfully operate in memory constraint environments while maintaining acceptable accuracy and performance compared to standard iterative PageRank methods? \par
 
+The experimental evaluation focuses on four key metrics that reflect the viability and feasibility of Monte Carlo PageRank. Most importantly, memory efficiency is analyzed as the primary metric to see how much memory is required to successfully compute rankings across different graph sizes and structures. Performance is analyzed to determine wether the methods are able to finish within an acceptable timeframe. Accuracy is determined by taking the top 20 nodes identified by Monte Carlo PageRank and compare them to the ground truth, GraphX PageRank top 20 nodes. Lastly, costs for both methods are measured to evaluate the resource consumption. All metrics are analyzed on real-world and synthetic graphs.\par
+
+The following sections present the used data sets, the experimental setup, Spark specific implementation details and error handling during experiments. Finally the experimental results are provided through a performance, cost and accuracy analysis.  
 
 
 \subsection{Datasets}
  Both real-world and synthetic datasets were used to evaluate and compare the approximate Monte Carlo method to the standard PageRank method. The real-world datasets were obtained from the Stanford Network Analysis Project (SNAP), a well-known repository of large graph datasets \cite{standford_university_snap_2025}. It includes social networks, web graphs, and communication networks, among others. These datasets such as wiki-Talk are publicly available and can be downloaded from the SNAP website. These graphs have realistic structures with millions of nodes and edges. \par
-Furthermore, synthetic graphs of any size and with different characteristics can be generated. In the experiments, Erdős–Rényi graphs of different sizes, ranging from $100.000$ to $20$ million nodes, have been generated. To establish comparable conditions between the different graph sizes, the density is kept consistent by controlling the number of outgoing edges per node. However, the in-degree of each node is random and ranges between $0$ and $n-1$, where $n$ is the total number of nodes. A simple python script was used to generate and store the graph structure in an edge list file.
+Furthermore, synthetic graphs of any size and with different characteristics were generated. In the experiments, Erdős–Rényi graphs of different sizes, ranging from $100.000$ to $20$ million nodes, have been created. To establish comparable conditions between the different graph sizes, the density is kept consistent by controlling the number of outgoing edges per node. However, the in-degree of each node is random and ranges between $0$ and $n-1$, where $n$ is the total number of nodes. A simple python script was used to generate and store the graph structure in an edge list file.
 
 \vspace{1.0em}
 \begin{algorithm}[H]
@@ -53,32 +57,11 @@ web-BerkStan & 685K & 7.6M  & Web Graph & Fast convergence, dense connections \\
 
 
 
- %The real-world datasets selected from SNAP vary in size, density, and structure. Among them are:
-
-%Wiki-Talk: A communication network from Wikipedia where a directed edge from user u to user v indicates that u has edited v’s talk page. This dataset contains millions of edges and is highly irregular, with some users having extremely high degree. It is one of the largest and most challenging graphs used in the experiments.
-
-% Wiki-Vote: A voting network of Wikipedia users where edges represent votes cast in administrator elections. The dataset is smaller but directed, providing a good comparison for medium-sized graphs.
-
-% Slashdot: A social network where edges represent “friend” or “foe” relationships between users. This dataset is useful because it represents a signed social graph with complex structure.
-
-% Amazon Co-Purchasing Network: A product co-purchasing network where nodes are products and edges indicate that two products are often bought together. This dataset models a recommendation-style graph and offers a different type of degree distribution.
-
-
-%\subsubsection{Data Sources of real-world Graphs}
-% Description of synthetic and real-world datasets used
-
-
 \subsection{Implementation in Spark}
-% \subsubsection{Graph Representation with RDDs}
-% \subsubsection{Adjacency List Construction}
-% \subsubsection{Broadcasting for Teleportation}
-% \subsubsection{Walker State Representation and Distribution}
-% \subsubsection{RDD Caching, Materialization, and Unpersisting}
-% \subsubsection{Repartitioning for Load Balancing}
 
-The Monte Carlo Implementation is structured around two main components: The graph representation and the walker states. Both of them are stored in Sparks RDDs, which make them suitable for processing in a distributed system.\par
+The Monte Carlo PageRank implementation is structured around two main components: The graph representation and the walker states. Both of them are stored in Sparks RDDs, which make them suitable for processing in a distributed system.\par
 
-At the beginning of the program an edge list file is read to get the structure of the graph. It is stored as an RDD of directed edges. Then by grouping the outgoing neighbors of each node an adjacency list is constructed, which is one of the main RDD-based components, that is represnting the entire graph structure:
+At the beginning of the program an edge list file is provided to get the structure of the graph. It is stored as an RDD of directed edges. Then, by grouping the outgoing neighbors of each node, an adjacency list is constructed, which is one of the main RDD-based components, that is representing the entire graph structure:
 
 \vspace{0.5em}
 \begin{lstlisting}[language=Scala, caption={Adjacency list creation}, label={lst:adjlist}]
@@ -95,7 +78,7 @@ val broadcastNodes = sc.broadcast(allNodesArray)
 \vspace{0.5em}
 
 This mitigates costly network shuffles during every teleportation. Because the set of nodes is required in every simulation step it is cached in memory for efficient access.
-A fixed number of walkers are initialized and represented in a seperate RDD. The RDD is distributed across multiple partitions to ensure efficient parallel processing and scaling when analyzing large graphs. Each entry in the RDD is a random vertex ID, representing the current vertex of a walker. In each simulation step the walker RDD is joined with the adjacency list to get all possible outgoing edges. After each walker updates its position, a new walker RDD is initialized with the updated positions. Before the previous walker RDD is explicitly unpersisted after the step is completed, the new walker RDD has to be materialized.
+A fixed number of walkers is initialized and represented in a separate RDD. The RDD is distributed across multiple partitions to ensure efficient parallel processing and scaling when analyzing large graphs. Each entry in the RDD is a random vertex ID, representing the current vertex of a walker. In each simulation step the walker RDD is joined with the adjacency list to get all possible outgoing edges. After each walker updates its position, a new walker RDD is initialized with the updated positions. Before the previous walker RDD is explicitly unpersisted after the step is completed, the new walker RDD has to be materialized.
 %\newpage
 \begin{lstlisting}[language=Scala, caption={Materializing and Unpersisting Walker RDD}, label={lst:materialize}]
 nextWalkersRDD.cache() 
@@ -105,7 +88,7 @@ walkersRDD.unpersist(blocking = false)
 \vspace{0.5em}
 This is because Spark uses lazy evaluation. It ensures that only the current walker RDD and the adjacency list occupy memory. \par
 Before caching the walkers RDD in memory, repartitioning is applied to the RDD after each step. This is crucial for balanced distribution across partitions as it ensures that the number of partitions remains the same throughout the experiment. 
-When processing large graphs that include nodes with high ingoing edges it prevents skews and stragglers allowing Spark to efficiently use all available cores. Managing the partitions correctly can have a significant impact on performance. 
+When processing large graphs that include nodes with high ingoing edges it prevents skews and stragglers allowing Spark to efficiently use all available cores. %Managing the partitions correctly can have a significant impact on performance. 
 
 
 \subsection{Experimental Framework and Automation}
@@ -117,75 +100,47 @@ When processing large graphs that include nodes with high ingoing edges it preve
 % \subsubsection{Automation via Shell Scripts}
 % \subsubsection{Data Collection and Visualization}
 
-To evaluate the performance of the approximate Monte Carlo method an experimental framework was established, that aims for reproducibility. It benchmarks the Monte Carlo method and compares it to the standard PageRank method. The evaluation is focusing mainly on memory efficiency while trading off performance and accuracy. \par
-% The datasets used for evaluation include both real-world and synthetic graphs. Real-world graphs such as wiki-Talk provide an irregular graph structure and millions of edges, presenting a practical use case. On the other hand, synthetic graphs of any size and with different characteristics can be generated. In the experiments, Erdős–Rényi graphs of different sizes, ranging from $100.000$ to $20$ million nodes, have been generated. To establish comparable conditions between the different graph sizes, the density is kept consistent by controlling the number of outgoing edges per node. However, the in-degree of each node is random and ranges between $0$ and $n-1$, where $n$ is the total number of nodes. A simple python script is used to generate and store the graph structure in an edge list file.
+To evaluate the performance of the approximate Monte Carlo method an experimental framework was established, that aims for reproducibility. It benchmarks the Monte Carlo PageRank method and compares it to the standard GraphX PageRank method. The evaluation is focusing mainly on memory efficiency while a trade off performance and accuracy is accepted. \par
 
-% \vspace{1.5em}
-% \begin{algorithm}[H]
-% \caption{Synthetic Graph Generator}
-% \KwIn{Range of node counts $[N_{\min}, N_{\max}]$, step size $\Delta N$, edges per node $E$}
-% \KwOut{Synthetic graph files with $E$ outgoing edges per node}
+During the experiments, the main parameters of the Monte Carlo PageRank method have been varied. The parameters include the number of walkers and the number of steps per walker. The goal was to systematically compare performance, memory and accuracy across varying parameters. In the GraphX implementation the only configured parameters were the tolerance and the damping factor. The tolerance is set to $0.001$. In the experiments it was kept on such a low value to get precise PageRank values and to compare the approximate Monte Carlo approach to the standard iterative PageRank method. The reset probability was set to $0.15$, for both methods. Additionally, different Spark configurations were analyzed such as the number of executors and most importantly the memory allocated per executor. \par
 
-% Set random seed for reproducibility\;
-% \For{$n \gets N_{\min}$ \KwTo $N_{\max}$ \KwStep $\Delta N$}{
-%   Create output file for graph with $n$ nodes\;
-%   \ForEach{node $u \in \{1, \dots, n\}$}{
-%     \For{$i \gets 1$ \KwTo $E$}{
-%       Select random destination $v \in \{1, \dots, n\}$\;
-%       \If{$v \neq u$}{
-%         Write edge $(u, v)$ to file\;
-%       }
-%     }
-%   }
-  
-% }
-% \end{algorithm} 
-% \vspace{1.5em}
+% To automate the experiments, shell scripts are used. Each script relies on spark-submit, which is the standard command line tool used to launch applications on a Spark cluster. In the spark-submit command configurations such as the number of executors and the memory per executor can be set. Furthermore, the edge list file is passed to the script as well as the Monte Carlo specific configuration such as the number of walkers and steps per walker. This setup ensures that experiments are running in a sequence without needing manual input and with consistency throughout multiple data sets. 
 
-\par
-During the experiments, the main parameters of the Monte Carlo method have been varied. The parameters include the number of walkers and the number of steps per walker. The goal was to systematically compare performance, memory and runtime across varying parameters. In the GraphX implementation the only parameters that were configured are the tolerance and the damping factor. The tolerance is usually set to $0.001$. In the experiments it was kept on such a low value to get very precise PageRank values and to compare the approximate Monte Carlo approach to the standard PageRank method. The reset probability was set to $0.15$ for both methods. Additionally, different Spark configurations were analyzed such as the number of executors and most importantly the memory allocated per executor. \par
-
-
-
-To automate the experiments, shell scripts are used. Each script relies on spark-submit, which is the standard command line tool used to launch applications on a Spark cluster. In the spark-submit command configurations such as the number of executors and the memory per executor can be set. Furthermore, the edge list file is passed to the script as well as the Monte Carlo specific configuration such as the number of walkers and steps per walker. This setup ensures that experiments are running in a sequence without needing manual input and with consistency throughout multiple data sets. Finally, the spark-submit command allows to either run the applications locally or to launch them to a cluster environment to simulate a real distributed system. \par
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{images/Workflow_image.pdf}
+    \includegraphics[width=0.9\linewidth]{images/Workflow.pdf}
     \caption{Experimental Workflow}
     \label{fig:workflow}
 \end{figure}
-To ensure comparable conditions across all experiments, all experiments were executed on a Spark cluster set up on the university's server. For simplicity, the Spark cluster was deployed in standalone mode, which is a built-in cluster manager. Only the master and workers need to be started on the university server. The cluster consists of one master node and four worker nodes. Each worker node has one executor with two cores, for a total of eight cores. \par
+Figure 4 shows a high level overview of the experimental workflow that was used to run PageRank on the given graph data and to obtain the results. To ensure comparable conditions across all experiments, a Spark cluster was set up on the universities server to execute the experiments. For simplicity, the Spark cluster was deployed in standalone mode, which is a built-in cluster manager. Only the master and workers needed to be started on the university server. The cluster consists of one master node and four worker nodes. Each worker node has one executor with two cores, for a total of eight cores.
+When the client starts the application via spark-submit the driver creates a Spark context and communicates with the cluster master. The master then distributes tasks to worker nodes, which execute the tasks by using their executors. After workers completed their tasks the results are collected and sent back to the driver and finally to the client to analyze them. This architecture allows distributed parallel data processing across multiple machines. \par
 
-
-In every experiment, metrics for both methods were collected, including configurations such as the number of walkers and steps for the Monte Carlo method. Another file collected the total runtime, allocated memory, and graph size to evaluate performance with limited memory and with different graph sizes. For accuracy evaluation, the top 20 ranks for both methods were saved in a separate file. \par
-All the collected data was saved in CSV files to efficiently analyze it in the next step. With the help of Python scripts and the use of libraries such as Matplotlib and Pandas, the data is structured and visualized in various plots of runtime, allocated memory, accuracy and cost. This provides a clear overview of the data and enables a thorough analysis of the data. \par
-This setup ensures the reproducibility and scalability of evaluating the Monte Carlo method. This was achieved through the use of various datasets, such as real-world and synthetic data, as well as a systematic variation in parameters. Additionally, scripts automated experiments and efficiently collected key metrics. This framework enabled the analysis of the empirical results presented in the following sections. \par
 % \begin{figure}[H]
 %     \centering
-%     \includegraphics[width=\linewidth]{images/Workflow_image.pdf}
+%     \includegraphics[width=\linewidth]{images/Workflow.pdf}
 %     \caption{Experimental Workflow}
 %     \label{fig:workflow}
 % \end{figure}
+
+% To ensure comparable conditions across all experiments, a Spark cluster was set up on the universities server to execute the experiments. For simplicity, the Spark cluster was deployed in standalone mode, which is a built-in cluster manager. Only the master and workers needed to be started on the university server. The cluster consists of one master node and four worker nodes. Each worker node has one executor with two cores, for a total of eight cores. \par
+
+
+In every experiment, metrics for both methods were collected, including configurations such as the number of walkers and steps for the Monte Carlo method. Additionally, the total runtime, allocated memory, and graph size were collected to evaluate performance with limited memory and with different graph sizes. For accuracy evaluation, the top 20 ranks for both methods were saved separately. \par
+To analyze the data, Python scripts and libraries such as Matplotlib and Pandas, were used. The data is structured and visualized in various plots of runtime, allocated memory, accuracy and cost. This provides a clear overview of the data and enables a thorough analysis of the results. 
+This framework enabled the analysis of the empirical results presented in the following sections. \par
+
+
 Finally, the given approach combines an approximate Monte Carlo implementation with a distributed Spark environment and a systematic experimental framework. The main goal of this setup was to determine whether the described method can operate with much less memory than the standard PageRank implementation. While a trade-off in accuracy and performance was expected and tolerated, the method aims to provide sufficient accuracy and performance. The evaluation will reveal whether the Monte Carlo approach is a viable alternative to the standard PageRank method in environments with restricted memory and large-scale graphs, addressing the central research question of this thesis.
 
 
 \subsection{Error Handling}
-% \subsubsection{Out-of-Memory Handling}
-% \subsubsection{Crash Scenarios Encountered During Experiments}
-% \subsubsection{Timeout: How and when to cancel an Experiment}
 
 When processing large-scale graphs, memory exhaustion and application crashes are inevitable. Therefore, error-handling strategies were necessary to ensure that experiments remain reproducible and manageable. For simplicity, this thesis only differentiates between out-of-memory (OOM) failures and timeouts. \par
 The Java Out-of-Memory exception is a common scenario that was expected in this experimental setup because the goal was to deliberately strain memory. This exception is usually thrown when there is not enough memory in the Java heap to allocate to an object. This means the garbage collector is unable to free up enough space for the object. In these experiments, the exception was detected in the log files. In that case, the configurations were automatically marked as failed and excluded from further experiments. \par
 Since very large graphs were being processed, some experiments can take a disproportionately long time to finish. This is why a timeout mechanism was implemented to prevent experiments from blocking the pipeline. If an experiment did not finish within the predefined time, the current experiment was terminated, and the next experiment with different configurations started. This ensures that all experiments finished within an acceptable time frame.  \par
 These error handling strategies established a more systematic and stable process. Experiments could run without manual intervention, and the resulting datasets are more consistent.
 
-% \subsection{Datasets}
- 
-
-
-% \subsubsection{Data Sources of real-world Graphs}
-% % Description of synthetic and real-world datasets used.
 
 \subsection{Allocated Memory}
 The main goal of this thesis was to investigate wether the Monte Carlo PageRank approach is able to operate on restrained memory and compare it to the standard PageRank approach. Therefore, allocated memory was analyzed as the key evaluation metric. 
@@ -257,9 +212,10 @@ The analysis predicted that the Monte Carlo approach would require fewer GiB-hou
 
 \subsubsection{Performance}
 
-The performance experiments show how the Monte Carlo and the GraphX implementation perform under different memory constraints and graph sizes. The first two plots show the executor versus runtime behavior of both methods on real-world graphs. \par
-The first plot is based on the \textbf{Wiki-Talk} Graph. This dataset represents a communication network with 2.4 million nodes and 5 million edges. It is the therefore the largest graph used across the experiments. Although, both methods perform very similar, the GraphX method encounters out-of-memory and timeout errors under 2000 MiB, while the Monte Carlo method successfully finishes at all memory configurations. The total runtime of all successful runs stays under 200 seconds, where the Monte Carlo almost remains constant at 100 seconds and the GraphX method starts around 170 seconds and then aligns with the Monte Carlo method. This proves the superior ability of the Monte Carlo approach to operate under very restricted memory conditions.\par
-The second plot shows the performance on the \textbf{Web-Google} graph, which is a web graph with 875K nodes and 5.1 million edges. A very noticeable difference to the wiki-Talk plots can be observed in the performance plot, where the strengths of the Monte Carlo method can be seen. The Monte Carlo method keeps runtimes consistent under 100 seconds across all memory configurations, which suggests that the the memory consumption stays well within the available resources.However, the GraphX method requires a lot more time to finish under memory pressure with a total runtime of 1300 seconds at 700 MiB per Executor. As allocated memory increases the performance of the GraphX method improves drastically and stabilizes at comparable runtimes as the Monte Carlo method. The extreme authority, typical for web-graphs, appears to cause the bad performance of the GraphX method under memory pressure. This is likely caused by excessive garbage collection triggered by the GraphX matrix multiplication that is operating with limited memory. Whereas the Monte Carlo approach with it's fixed number of walkers avoids that problem entirely since the memory footprint is proportional only to the number of walkers. \par
+The performance experiments show how the Monte Carlo and the GraphX implementation perform under memory constraints and different graph sizes. The first two plots show the executor memory in MiB on the x-axis versus the runtime behavior on the y-axis of both methods on real-world graphs. \par
+
+The first plot is based on the \textbf{Wiki-Talk} Graph. This dataset represents a communication network with 2.4 million nodes and 5 million edges. It is the largest graph used across all experiments. Although, both methods perform very similar, the GraphX method encounters out-of-memory and timeout errors under 2000 MiB, while the Monte Carlo method successfully finishes at all memory configurations. The total runtime of all successful runs for both methods stays under 200 seconds. The Monte Carlo method remains constant at 100 seconds and the GraphX method starts around 170 seconds and then aligns with the Monte Carlo method. This proves the superior ability of the Monte Carlo approach to operate under restricted memory conditions while GraphX fails to operate at all.\par
+The second plot shows the performance on the \textbf{Web-Google} graph, which is a web graph with 875K nodes and 5.1 million edges. A very noticeable difference to the wiki-Talk plots can be observed in the performance plot, where the strengths of the Monte Carlo method can be observed. The Monte Carlo method keeps runtimes consistent under 100 seconds across all memory configurations, which suggests that the memory consumption stays well within the available resources. However, the GraphX method requires a lot more time to finish under memory pressure with a total runtime of 1300 seconds at 700 MiB per Executor. As allocated memory increases the performance of the GraphX method improves drastically and stabilizes at comparable runtimes as the Monte Carlo method. The extreme authority, typical for web-graphs, appears to cause the performance issues encountered by the GraphX method under memory pressure. This is likely caused by excessive garbage collection triggered by the GraphX matrix multiplication that is operating with limited memory. Whereas the Monte Carlo approach with it's fixed number of walkers avoids that problem entirely since the memory consumption is proportional to the number of walkers. \par
 
 
 
@@ -270,20 +226,21 @@ The second plot shows the performance on the \textbf{Web-Google} graph, which is
         \centering
         \includegraphics[width=\linewidth]{images/plots/wiki-Talk/memory_vs_runtime_wiki_talk.pdf}
         \caption{Wiki-Talk Graph with 2.4 million nodes and 5 million edges}
-        \label{fig:wikirun}
+        %\label{fig:wikirun}
     \end{subfigure}\hfill
     \begin{subfigure}[t]{0.5\linewidth}
         \centering
         \includegraphics[width=\linewidth]{images/plots/web-Google/memory_vs_runtime_web_google.pdf}
         \caption{Web-Google Graph with 800 thousand      nodes and 5 million edges}
-        \label{fig:wikigibhrs}
+        %\label{fig:wikigibhrs}
     \end{subfigure}
     \caption{Memory vs. Runtime,\\Configs: 3 walkers per node, 10 steps per walker}
-    \label{fig:wiki-comparison}
+    %\label{fig:wiki-comparison}
 \end{figure}
 
-The following plots show the performance of both methods on synthetic Erdős-Renyi graphs. The analysis gives an insight on how the methods perform with increasing graph size while keeping the same graph structure.\par
-The analysis of the ER graph with two edges per node includes the runtime and the minimal memory configuration used for that graph size. For the Monte Carlo method, the runtime starts below 100 seconds at 100 thousand nodes and then increases to just under 1500 seconds at 20 million nodes. During the experiments the required memory remains stable at 450 MiB. The GraphX method's runtime starts similar to the Monte Carlo method but then has higher runtimes for graphs between 200 thousand and 800 thousand nodes. However, for graphs between 900 thousand and 20 million nodes the runtimes of the GraphX method are lower compared to the Monte Carlo method. Although the performance of the GraphX method is better on bigger graphs the required memory is much higher than in the Monte Carlo method. GraphX starts with 450 MiB on the smallest graph but quickly increases to 3000 MiB and then finally to 8000 MiB at 20 million nodes.\par
+The following plots show the performance of both methods on synthetic Erdős-Renyi graphs. The analysis gives an insight on how the methods perform with increasing graph size while keeping the same graph structure. The graphs show the graph size represented by the number of nodes on the x-axis, the runtime in seconds and the minimal memory in MiB on the two y-axes.\par
+
+In the first plot all graphs have ttwo outgoing edges. For the Monte Carlo method, the runtime starts below 100 seconds at 100 thousand nodes and then increases to just under 1500 seconds at 20 million nodes. During the experiments the required memory remains stable at 450 MiB. The GraphX method's runtime starts similar to the Monte Carlo method but then has higher runtimes for graphs between 200 thousand and 800 thousand nodes. However, for graphs between 900 thousand and 20 million nodes the runtimes of the GraphX method are lower compared to the Monte Carlo method. Although the performance of the GraphX method is better on bigger graphs the required memory is much higher than in the Monte Carlo method. GraphX starts with 450 MiB on the smallest graph but quickly increases to 3000 MiB and then finally to 8000 MiB at 20 million nodes.\par
 When increasing the edge count per node to three, the memory differences between the methods become clearer. While both methods perform similar compared to the previous experiment, the GrapX method has a timeout at 20 million nodes. The required memory for the Monte Carlo method remains at 450 MiB across all graphs. In contrast, the GraphX method's memory increases starting from 450 MiB to 6000 MiB at 1 million nodes and 8000 MiB at 15 million nodes.\par
 The performance analysis reveals different key findings. First, the Monte Carlo method demonstrates much better performance stability under constraint memory, while GraphX either fails or suffers from poor performance. Second, the graph structure has a significant influence on the performance. Web graphs with extreme authority show most advantages for the Monte Carlo method, while more balanced communication graphs like wiki-talk only show little advantage of the Monte Carlo method. Lastly, the Monte Carlo method encounters much better scalability on large graphs, maintaining a low memory consumption, while GraphX requires a much higher amount of memory. The performance experiments show that the Monte Carlo method is superior to standard methods as it is able to operate in a memory constrained environment without trading off performance.
 
@@ -294,16 +251,16 @@ The performance analysis reveals different key findings. First, the Monte Carlo 
         \centering
         \includegraphics[width=\linewidth]{images/plots/ER_2edg/combined_runtime_memory_vs_nodes_2edges_gx_mc.pdf}
         \caption{Erdős–Rényi Graph with two outgoing edges per node}
-        \label{fig:wikigibhrs}
+        %\label{fig:wikigibhrs}
     \end{subfigure}
     \begin{subfigure}[t]{0.5\linewidth}
         \centering
         \includegraphics[width=\linewidth]{images/plots/ER_3edg/combined_runtime_memory_vs_nodes_3edges_gx_mc.pdf}
         \caption{Erdős–Rényi Graph with three outgoing edges per node}
-        \label{fig:wikigibhrs}
+        %\label{fig:wikigibhrs}
     \end{subfigure}
     \caption{Performance Graphs,\\Configs: 3 walkers per node, 10 steps per node}
-    \label{fig:wiki-comparison}
+    %\label{fig:wiki-comparison}
 \end{figure}
 
 
@@ -325,13 +282,13 @@ The performance analysis reveals different key findings. First, the Monte Carlo 
         \centering
         \includegraphics[width=\linewidth]{images/plots/wiki-Talk/gbhrs_nodes_wiki_talk.pdf}
         \caption{wiki-Talk Graph}
-        \label{fig:wikirun}
+        %\label{fig:wikirun}
     \end{subfigure}\hfill
     \begin{subfigure}[t]{0.5\linewidth}
         \centering
         \includegraphics[width=\linewidth]{images/plots/web-Google/gbhrs_nodes_web_google.pdf}
         \caption{web-Google Graph}
-        \label{fig:wikigibhrs}
+        %\label{fig:wikigibhrs}
     \end{subfigure}
     \caption{Cost Graphs, \\ Configs: 3 walkers per node, 10 steps per walker}
 \end{figure}
@@ -351,16 +308,16 @@ These findings have significant impact on real world deployment scenarios where 
         \centering
         \includegraphics[width=\linewidth]{images/plots/ER_2edg/gbhrs_nodes_er_graph_2edges.pdf}
         \caption{Erdős–Rényi Graph with two outgoing edges per node}
-        \label{fig:wikigibhrs}
+        %\label{fig:wikigibhrs}
     \end{subfigure}
     \begin{subfigure}[t]{0.5\linewidth}
         \centering
         \includegraphics[width=\linewidth]{images/plots/ER_3edg/gbhrs_nodes_er_graph_3edges.pdf}
         \caption{Erdős–Rényi Graph with three outgoing edges per node}
-        \label{fig:wikigibhrs}
+        %\label{fig:wikigibhrs}
     \end{subfigure}
     \caption{Cost Graphs, \\ Configs: 3 walkers per node, 10 steps per walker}
-    \label{fig:wiki-comparison}
+    %\label{fig:wiki-comparison}
 \end{figure}
 
 %synthetic plots costs
@@ -378,16 +335,16 @@ Unlike the wiki-Talk graph the web-Google's accuracy graph improves continuously
         \centering
         \includegraphics[width=\linewidth]{images/plots/wiki-Talk/accuracy_plots_wiki_talk.pdf}
         \caption{wiki-Talk}
-        \label{fig:wikirun}
+        %\label{fig:wikirun}
     \end{subfigure}\hfill
     \begin{subfigure}[t]{0.5\linewidth}
         \centering
         \includegraphics[width=\linewidth]{images/plots/web-Google/accuracy_plots_web_google.pdf}
         \caption{web-Google}
-        \label{fig:wikigibhrs}
+        %\label{fig:wikigibhrs}
     \end{subfigure}
     \caption{Accuracy on real-world graphs}
-    \label{fig:wiki-comparison}
+    %\label{fig:wiki-comparison}
 \end{figure}
 
 
