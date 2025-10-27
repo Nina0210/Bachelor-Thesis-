@@ -1,4 +1,9 @@
 \section{Evaluation}
+
+\subsection{Overview}
+
+
+
 \subsection{Datasets}
  Both real-world and synthetic datasets were used to evaluate and compare the approximate Monte Carlo method to the standard PageRank method. The real-world datasets were obtained from the Stanford Network Analysis Project (SNAP), a well-known repository of large graph datasets \cite{standford_university_snap_2025}. It includes social networks, web graphs, and communication networks, among others. These datasets such as wiki-Talk are publicly available and can be downloaded from the SNAP website. These graphs have realistic structures with millions of nodes and edges. \par
 Furthermore, synthetic graphs of any size and with different characteristics can be generated. In the experiments, Erdős–Rényi graphs of different sizes, ranging from $100.000$ to $20$ million nodes, have been generated. To establish comparable conditions between the different graph sizes, the density is kept consistent by controlling the number of outgoing edges per node. However, the in-degree of each node is random and ranges between $0$ and $n-1$, where $n$ is the total number of nodes. A simple python script was used to generate and store the graph structure in an edge list file.
